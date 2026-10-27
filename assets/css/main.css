@@ -11,7 +11,7 @@
 }
 /* end tokens */
 
-@media (prefers-color-scheme: dark) {
+@media screen and (prefers-color-scheme: dark) {
   /* tokens:dark */
   :root {
     --paper: #1C211E;
@@ -28,11 +28,12 @@
   color-scheme: light dark;
   --serif: "Literata", Georgia, serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  --measure: 66ch;
+  --measure: 36.5rem; /* about 67 characters a line of body text; rem, so every element gets the same column */
   --note-width: 15rem;
   --note-gap: 2.5rem;
   --gutter: 1.25rem;
-  --cell: 5mm;
+  --cell: 19px; /* about 5 mm, in whole pixels so grid lines stay sharp */
+  --date-col: 6.25em; /* widest entry date, "08 May 2026", is 5.93em in Literata */
 }
 
 /* Fonts: self-hosted subsets, SIL Open Font License. Ranges match scripts/fonts.sh. */
@@ -74,6 +75,7 @@
   font-weight: 100 800;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-017F, U+0370-03FF, U+0400-045F, U+2000-206F, U+2070-209F, U+20AC, U+2190-21FF, U+2200-22FF, U+2500-257F, U+25A0-25FF;
 }
 
 /* Base */
@@ -92,12 +94,15 @@ a { color: var(--pencil); text-decoration-thickness: 1px; text-underline-offset:
 a:hover { text-decoration-thickness: 2px; }
 :focus-visible { outline: 2px solid var(--pencil); outline-offset: 2px; }
 h1, h2, h3, h4 { font-weight: 650; line-height: 1.2; text-wrap: balance; }
-code, kbd, pre { font-family: var(--mono); font-size: 0.875em; }
+code, kbd, pre { font-family: var(--mono); font-size: 0.875em; font-variant-ligatures: none; }
+pre code { font-size: 1em; }
+.prose, .page-title, .entries, .paper { overflow-wrap: break-word; }
 
 .skip { position: absolute; top: -4rem; left: 1rem; z-index: 10; padding: 0.5rem 0.75rem; background: var(--paper); color: var(--ink); }
 .skip:focus { top: 1rem; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
+/* 56.5rem: text, gap and note columns plus the gutters, so a margin note ends at the content edge. */
 .wrap {
   max-width: calc(var(--measure) + var(--note-gap) + var(--note-width) + 2 * var(--gutter));
   margin-inline: auto;
@@ -137,7 +142,7 @@ main { padding-block: 2.5rem 4rem; }
 .section-intro { margin-bottom: 2rem; }
 
 /* Prose */
-.prose { max-width: var(--measure); counter-reset: note; }
+.prose { display: flow-root; max-width: var(--measure); counter-reset: note; }
 .prose > :first-child { margin-top: 0; }
 .prose h2 { margin: 2.25em 0 0.6em; font-size: 1.5rem; }
 .prose h3 { margin: 1.9em 0 0.5em; font-size: 1.25rem; }
@@ -147,24 +152,27 @@ main { padding-block: 2.5rem 4rem; }
 .prose img { max-width: 100%; height: auto; }
 .prose blockquote { margin: 1.5em 0; padding-left: 1.25rem; border-left: 2px solid var(--grid); color: var(--muted); }
 .prose hr { margin: 2.5em 0; border: 0; border-top: 2px solid var(--grid); }
-.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 1rem; font-variant-numeric: lining-nums tabular-nums; }
+.table-scroll { max-width: 100%; overflow-x: auto; }
+.prose table { border-collapse: collapse; font-size: 1rem; font-variant-numeric: lining-nums tabular-nums; }
 .prose th, .prose td { padding: 0.4rem 0.9rem 0.4rem 0; border-bottom: 1px solid var(--grid); text-align: left; vertical-align: top; }
 .prose th { border-bottom-width: 2px; font-weight: 650; }
 
 /* Code */
-:not(pre) > code { padding: 0.1em 0.3em; background: var(--code-bg); border-radius: 2px; }
-pre { overflow-x: auto; padding: 1rem 1.25rem; background: var(--code-bg); line-height: 1.5; tab-size: 4; border-radius: 2px; }
+:not(pre) > code { padding: 0.1em 0.3em; background: var(--code-bg); border-radius: 2px; overflow-wrap: anywhere; }
+/* The transparent border keeps an edge in forced-colours mode. */
+pre { overflow-x: auto; padding: 1rem 1.25rem; background: var(--code-bg); border: 1px solid transparent; line-height: 1.5; tab-size: 4; border-radius: 2px; }
 .highlight, .prose > pre { margin: 1.5em 0; }
 .highlight pre { margin: 0; }
 pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
 
-/* Math */
-.katex { font-size: 1.05em; }
-.katex-display { margin: 1.5em 0; overflow-x: auto; overflow-y: hidden; }
+/* Math. The .prose prefix wins over katex.min.css, which loads later. */
+.prose .katex { font-size: 1.1em; }
+.prose .katex-display { margin: 1.5em 0; overflow-x: auto; overflow-y: hidden; }
 
-/* Sidenotes: margin notes at 1100px and wider, tap-to-open below that. No JavaScript. */
+/* Sidenotes: margin notes at 68.75em (1100px at the default text size) and wider, tap-to-open below that. No JavaScript. */
 .note-toggle { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.note-ref { counter-increment: note; color: var(--pencil); cursor: pointer; }
+.note-ref { position: relative; counter-increment: note; color: var(--pencil); cursor: pointer; }
+.note-ref::before { content: ""; position: absolute; inset: -0.5rem -0.6rem; } /* larger tap area */
 .note-ref::after { content: counter(note); padding-inline: 0.1em; font-size: 0.7em; line-height: 0; vertical-align: super; font-variant-numeric: lining-nums; }
 .note-toggle:focus-visible + .note-ref { outline: 2px solid var(--pencil); outline-offset: 2px; }
 .note { display: none; }
@@ -177,7 +185,7 @@ pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
   font-size: 1rem;
   line-height: 1.5;
 }
-@media (min-width: 1100px) {
+@media (min-width: 68.75em) {
   .note-toggle { display: none; }
   .note-ref { cursor: auto; }
   .note,
@@ -201,7 +209,7 @@ pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
 .year + .year { margin-top: 2.5rem; }
 .entries {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-columns: var(--date-col) minmax(0, 1fr); /* fixed, so titles in different lists line up */
   column-gap: 1.25rem;
   row-gap: 0.6rem;
   max-width: calc(var(--measure) + 8rem);
@@ -227,7 +235,7 @@ pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
 .cv-list dd { margin: 0; }
 .cv-what { font-weight: 600; }
 .cv-text { display: block; }
-@media (max-width: 34rem) {
+@media (max-width: 34em) {
   .cv-list { grid-template-columns: minmax(0, 1fr); row-gap: 0.1rem; }
   .cv-list dd { margin-bottom: 0.9rem; }
 }
@@ -239,7 +247,32 @@ pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
 .prose .project__links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 0.5rem 0 0; padding: 0; list-style: none; }
 .prose .project__links li + li { margin-top: 0; }
 
-/* Footer. The small size sits on the list, not on .foot, so the .wrap width (in ch) matches the page. */
-.foot { padding-block: 1.25rem 2.5rem; border-top: 2px solid var(--grid); color: var(--muted); }
-.foot ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0; padding: 0; list-style: none; font-size: 0.9rem; }
+/* Footer */
+.foot { padding-block: 1.25rem 2.5rem; border-top: 2px solid var(--grid); color: var(--muted); font-size: 0.9rem; }
+.foot ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0; padding: 0; list-style: none; }
 .foot a { color: inherit; }
+
+/* Print: light tokens (the dark block is screen-only), no grid pattern or nav, sidenotes under their paragraph. */
+@page { margin: 16mm; }
+@media print {
+  :root { color-scheme: light; }
+  body, .band { background: none; }
+  .band__nav, .skip, .note-toggle, .cv-pdf, .foot { display: none; }
+  .wrap { max-width: none; padding-inline: 0; }
+  main { padding-block: 1.5rem 2rem; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; border-color: var(--grid); }
+  .table-scroll { overflow: visible; }
+  .note,
+  .note-toggle:checked + .note-ref + .note {
+    display: block;
+    float: none;
+    width: auto;
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--grid);
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+  h2, h3, h4 { break-after: avoid; }
+  pre, blockquote, tr, img, .cv-list dd { break-inside: avoid; }
+}

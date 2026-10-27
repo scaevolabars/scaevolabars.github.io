@@ -192,6 +192,22 @@ def test_description_falls_back_to_summary(tmp_path: Path) -> None:
     assert meta["content"] == "No description. It’s about vector<T>. Second paragraph."
 
 
+def test_prose_table_scrolls_in_a_focusable_region(tmp_path: Path) -> None:
+    src = copy_site(tmp_path / "src")
+    (src / "content" / "posts" / "table.md").write_text(
+        "---\ntitle: Table\ndate: 2026-01-02\n---\n| Venue | Fills |\n|---|---:|\n| A | 1,204 |\n",
+        encoding="utf-8",
+    )
+    result = hugo_build(src, tmp_path / "out")
+    assert result.returncode == 0, result.stderr + result.stdout
+    table = page(tmp_path / "out", "/posts/table/").select_one(".prose table")
+    region = table.parent
+    assert region.name == "div" and region["class"] == ["table-scroll"]
+    assert region["role"] == "region" and region["tabindex"] == "0" and region["aria-label"] == "Table"
+    # Hugo's alignment output survives the wrapper. --minify drops the space after the colon.
+    assert [td.get("style", "").replace(" ", "") for td in table.select("tbody td")] == ["", "text-align:right"]
+
+
 def test_note_shows_paper_reference(draft_site: Path) -> None:
     paper = page(draft_site, "/notes/sample-note/").select_one("p.paper")
     assert paper.select_one("a")["href"] == "https://arxiv.org/abs/1706.03762"
