@@ -1,6 +1,7 @@
+import subprocess
 from pathlib import Path
 
-from helpers import copy_site, hugo_build, page
+from helpers import ROOT, copy_site, hugo_build, page
 
 SAMPLE = "/posts/sample-features/"
 
@@ -30,3 +31,26 @@ def test_sidenotes_inside_another_shortcode_get_unique_ids(tmp_path: Path) -> No
     assert result.returncode == 0, result.stderr + result.stdout
     ids = [toggle["id"] for toggle in page(tmp_path / "out", "/posts/nested/").select("input.note-toggle")]
     assert len(ids) == 3 and len(set(ids)) == 3, ids
+
+
+def test_math_renders_at_build_time(draft_site: Path) -> None:
+    soup = page(draft_site, SAMPLE)
+    assert soup.select_one(".prose .katex-display") is not None
+    assert soup.select(".prose p .katex")
+    assert soup.select_one(".note .katex") is not None
+    assert soup.select_one('link[href="/vendor/katex/katex.min.css"]') is not None
+    assert "$5" in soup.select_one(".prose").get_text()
+
+
+def test_pages_without_math_skip_katex_css(prod_site: Path) -> None:
+    assert page(prod_site, "/about/").select_one("link[href*=katex]") is None
+
+
+def test_katex_css_matches_the_katex_inside_hugo() -> None:
+    """Hugo renders math with its bundled KaTeX, so the vendored CSS must be the same version."""
+    hugo = subprocess.run(["hugo", "version"], capture_output=True, text=True, check=True).stdout
+    assert hugo.startswith("hugo v0.166."), (
+        "Hugo changed: look up the KaTeX version it bundles and update KATEX_VERSION in scripts/vendor.sh"
+    )
+    css = (ROOT / "static" / "vendor" / "katex" / "katex.min.css").read_text(encoding="utf-8")
+    assert 'content:"0.18.4"' in css
