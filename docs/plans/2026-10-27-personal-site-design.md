@@ -29,7 +29,7 @@ Navigation: Writing, Notes, Projects, CV, About.
 ```
 content/
   _index.md     Home: 2-3 sentence intro, 5 latest posts, 3 latest notes
-  posts/        Long posts. Front matter: title, date, topics, summary, draft
+  posts/        Long posts. Front matter: title, date, topics, description, draft
   notes/        Paper notes. Adds: paper, authors, year, url
   projects.md   Renders data/projects.yaml (name, year, text, links)
   cv.md         Renders data/cv.yaml; links static/cv.pdf if present
@@ -93,7 +93,7 @@ Layout:
 - The grid band is the one bold element. On Home it is taller and holds the
   name and intro. Everything below is quiet.
 - Lists are plain rows: date, title, topics. No cards, no thumbnails.
-- Sidenotes: `{{% note %}}…{{% /note %}}` shortcode. At 1100 px and wider the
+- Sidenotes: `{{< note >}}…{{< /note >}}` shortcode (the `%` form would drop the raw HTML). At 1100 px and wider the
   note floats in the right margin. Narrower, the number is a CSS-only toggle
   that opens the note under the paragraph.
 - Code: custom Chroma theme from the palette.
@@ -139,3 +139,15 @@ Checks before the work is called done:
    with sidenote + math + code + diagram, a note, CV, projects.
 
 Work happens on branch `hugo-site`. The owner then chooses merge, PR, or keep.
+
+## Notes from planning
+
+- Hugo 0.166.0 bundles KaTeX 0.18.4, so the KaTeX CSS is pinned to 0.18.4.
+- Mermaid 12.2.0 is used as its ES module build (31 KB entry, chunks loaded on
+  demand). `scripts/vendor.sh` fetches KaTeX and Mermaid from npm with pinned
+  SHA-256 checksums into `static/vendor/` (git-ignored), so the repo stays small
+  and the files are still self-hosted.
+- Literata ships as two subsets per style (Latin+Greek+symbols, Cyrillic) with
+  `unicode-range`, so a browser only downloads Cyrillic when a page uses it.
+- Muted ink on the grid colour is 4.29:1, so muted text never sits in the band.
+- Deploy refuses to publish while `PLACEHOLDER` text remains in the built site.
