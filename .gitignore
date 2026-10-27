@@ -2,6 +2,7 @@
 /resources/_gen/
 /.hugo_build.lock
 /static/vendor/
+/.vendor-stamp
 /.devbox/
 /.venv/
 __pycache__/

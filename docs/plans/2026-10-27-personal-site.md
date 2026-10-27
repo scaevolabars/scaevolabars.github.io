@@ -39,6 +39,7 @@ ls -A            # expect: .git docs
 /resources/_gen/
 /.hugo_build.lock
 /static/vendor/
+/.vendor-stamp
 /.devbox/
 /.venv/
 __pycache__/
@@ -112,21 +113,30 @@ MERMAID_SHA256=071914164d0f6d53e5c26a10a220230d4ae8d37ed0f2263fbf072266f0af3a0a
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="$root/static/vendor"
-stamp="$out/.versions"
+# The stamp stays out of static/: Hugo publishes dotfiles from there.
+stamp="$root/.vendor-stamp"
 want="katex-$KATEX_VERSION mermaid-$MERMAID_VERSION"
 
-if [[ -f "$stamp" && "$(cat "$stamp")" == "$want" ]]; then
+if [[ -f "$stamp" && "$(cat "$stamp")" == "$want" &&
+      -f "$out/katex/katex.min.css" && -f "$out/mermaid/mermaid.esm.min.mjs" ]]; then
   exit 0
 fi
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
+sha256() {
+  if command -v sha256sum >/dev/null; then sha256sum "$1"; else shasum -a 256 "$1"; fi | cut -d' ' -f1
+}
+
 fetch() {
   local name=$1 version=$2 sha=$3
   local tgz="$tmp/$name.tgz"
-  curl -fsSL "https://registry.npmjs.org/$name/-/$name-$version.tgz" -o "$tgz"
-  echo "$sha  $tgz" | shasum -a 256 -c - >/dev/null
+  curl -fsSL --retry 3 --retry-connrefused "https://registry.npmjs.org/$name/-/$name-$version.tgz" -o "$tgz"
+  if [[ "$(sha256 "$tgz")" != "$sha" ]]; then
+    echo "vendor: $name $version checksum mismatch" >&2
+    exit 1
+  fi
   mkdir -p "$tmp/$name"
   tar -xzf "$tgz" -C "$tmp/$name"
 }
@@ -134,7 +144,7 @@ fetch() {
 fetch katex "$KATEX_VERSION" "$KATEX_SHA256"
 fetch mermaid "$MERMAID_VERSION" "$MERMAID_SHA256"
 
-rm -rf "$out"
+rm -rf "$out" "$stamp"
 mkdir -p "$out/katex/fonts" "$out/mermaid/chunks/mermaid.esm.min"
 cp "$tmp/katex/package/dist/katex.min.css" "$out/katex/"
 cp "$tmp/katex/package/dist/fonts/"*.woff2 "$out/katex/fonts/"
@@ -145,18 +155,22 @@ echo "vendor: $want"
 ```
 
 Run: `chmod +x scripts/vendor.sh && scripts/vendor.sh && ls static/vendor/katex static/vendor/mermaid`
-Expected: `vendor: katex-0.18.4 mermaid-12.2.0`, `katex.min.css fonts`, `chunks mermaid.esm.min.mjs`. A second run prints nothing (stamp hit).
+Expected: `vendor: katex-0.18.4 mermaid-12.2.0`, `katex.min.css fonts`, `chunks mermaid.esm.min.mjs`. A second run prints nothing (stamp hit: `.vendor-stamp` at the repo root matches and the key files exist). After `rm -rf static/vendor`, the next run fetches again.
 
 **Step 2: Write `scripts/fonts.sh`**
 
 ```bash
 #!/usr/bin/env bash
 # Rebuild the font subsets in static/fonts/. Outputs are committed; run only to change them.
+# Run as `devbox run -- scripts/fonts.sh`: it needs the pinned uvx.
 set -euo pipefail
+
+GOOGLE_FONTS_REV=ddf386ba1b9fbc6b2c818f1ddcd9148f54ced94b
+FONTTOOLS_VERSION=4.68.0
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="$root/static/fonts"
-src="https://raw.githubusercontent.com/google/fonts/main/ofl"
+src="https://raw.githubusercontent.com/google/fonts/$GOOGLE_FONTS_REV/ofl"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$out"
@@ -164,16 +178,16 @@ mkdir -p "$out"
 curl -fsSL "$src/literata/Literata%5Bopsz,wght%5D.ttf" -o "$tmp/literata.ttf"
 curl -fsSL "$src/literata/Literata-Italic%5Bopsz,wght%5D.ttf" -o "$tmp/literata-italic.ttf"
 curl -fsSL "$src/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf" -o "$tmp/jetbrains-mono.ttf"
-curl -fsSL "$src/literata/OFL.txt" -o "$out/Literata-OFL.txt"
-curl -fsSL "$src/jetbrainsmono/OFL.txt" -o "$out/JetBrainsMono-OFL.txt"
+curl -fsSL "$src/literata/OFL.txt" -o "$tmp/Literata-OFL.txt"
+curl -fsSL "$src/jetbrainsmono/OFL.txt" -o "$tmp/JetBrainsMono-OFL.txt"
 
 # Keep these ranges in sync with the unicode-range values in assets/css/main.css.
 latin="U+0000-017F,U+0370-03FF,U+2000-206F,U+2070-209F,U+20AC,U+2100-214F,U+2190-21FF,U+2200-22FF,U+25A0-25FF,U+FFFD"
-cyrillic="U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116"
+cyrillic="U+0400-045F,U+0490-0491,U+04B0-04B1"
 mono="U+0000-017F,U+0370-03FF,U+0400-045F,U+2000-206F,U+2070-209F,U+20AC,U+2190-21FF,U+2200-22FF,U+2500-257F,U+25A0-25FF"
 
 subset() {
-  uvx --from 'fonttools[woff]' pyftsubset "$1" --unicodes="$2" \
+  uvx --from "fonttools[woff]==$FONTTOOLS_VERSION" pyftsubset "$1" --unicodes="$2" \
     --layout-features='*' --flavor=woff2 --output-file="$3"
 }
 
@@ -182,6 +196,7 @@ subset "$tmp/literata.ttf" "$cyrillic" "$out/literata-cyrillic.woff2"
 subset "$tmp/literata-italic.ttf" "$latin" "$out/literata-italic.woff2"
 subset "$tmp/literata-italic.ttf" "$cyrillic" "$out/literata-italic-cyrillic.woff2"
 subset "$tmp/jetbrains-mono.ttf" "$mono" "$out/jetbrains-mono.woff2"
+cp "$tmp/Literata-OFL.txt" "$tmp/JetBrainsMono-OFL.txt" "$out/"
 ls -l "$out"
 ```
 
@@ -1064,7 +1079,7 @@ Expected: FAIL (`main.css has no tokens:dark block`, no font URLs).
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1;
 }
 @font-face {
   font-family: "Literata";
@@ -1080,7 +1095,7 @@ Expected: FAIL (`main.css has no tokens:dark block`, no font URLs).
   font-weight: 200 900;
   font-style: italic;
   font-display: swap;
-  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1;
 }
 @font-face {
   font-family: "JetBrains Mono";
