@@ -1,1 +1,1 @@
-{{- .Inner -}}
+{{- $id := printf "note-%d-%d-%d" .Position.LineNumber .Position.ColumnNumber .Ordinal -}}{{- with .Parent }}{{ $id = printf "%s-%d-%d" $id .Position.LineNumber .Position.ColumnNumber }}{{ end -}}<input type="checkbox" class="note-toggle" id="{{ $id }}"><label class="note-ref" for="{{ $id }}"><span class="vh">Note </span></label><span class="note" role="note">{{ .Inner | .Page.RenderString }}</span>{{- /* end */ -}}
