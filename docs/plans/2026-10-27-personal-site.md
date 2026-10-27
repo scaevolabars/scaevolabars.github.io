@@ -1522,7 +1522,7 @@ def test_syntax_colours_keep_muted_text_off_the_grid() -> None:
 **Step 2: Run to verify it fails**
 
 Run: `devbox run -- uv run pytest tests/test_features.py -v`
-Expected: FAIL on `.chroma .k` (the Chroma markup itself already exists).
+Expected: `test_code_is_highlighted_with_classes` FAILS on `.chroma .k` (the Chroma markup itself already exists). The guard test `test_syntax_colours_keep_muted_text_off_the_grid` may already pass.
 
 **Step 3: Write `assets/css/syntax.css`**
 
