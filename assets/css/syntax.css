@@ -1,1 +1,12 @@
-/* Code highlighting. */
+/* Code highlighting from the site palette. Class names come from Chroma. */
+.chroma { color: var(--ink); background: var(--code-bg); }
+.chroma .k, .chroma .kc, .chroma .kd, .chroma .kn, .chroma .kp, .chroma .kr, .chroma .kt { font-weight: 700; }
+.chroma .nf, .chroma .fm { font-weight: 600; }
+.chroma .s, .chroma .sa, .chroma .sb, .chroma .sc, .chroma .dl, .chroma .sd, .chroma .s2, .chroma .se,
+.chroma .sh, .chroma .si, .chroma .sx, .chroma .sr, .chroma .s1, .chroma .ss,
+.chroma .m, .chroma .mb, .chroma .mf, .chroma .mh, .chroma .mi, .chroma .il, .chroma .mo { color: var(--pencil); }
+.chroma .c, .chroma .ch, .chroma .cm, .chroma .c1, .chroma .cs, .chroma .cp, .chroma .cpf { color: var(--muted); }
+.chroma .gd { color: var(--muted); text-decoration: line-through; }
+.chroma .gi { font-weight: 700; }
+.chroma .hl { display: block; box-shadow: inset 3px 0 var(--pencil); }
+.chroma .err { text-decoration: underline wavy; }

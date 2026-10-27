@@ -76,3 +76,16 @@ def test_only_pages_with_diagrams_load_javascript(prod_site: Path, draft_site: P
         for html in site.rglob("*.html"):
             soup = BeautifulSoup(html.read_text(encoding="utf-8"), "html.parser")
             assert bool(soup.select("script")) == bool(soup.select("pre.mermaid")), html
+
+
+def test_code_is_highlighted_with_classes(draft_site: Path) -> None:
+    soup = page(draft_site, SAMPLE)
+    assert len(soup.select(".prose pre.chroma")) == 2
+    assert all(el.get("style") is None for el in soup.select("pre.chroma, pre.chroma *"))
+    css = next((draft_site / "css").glob("site.*.css")).read_text(encoding="utf-8")
+    assert ".chroma .k" in css
+
+
+def test_syntax_colours_keep_muted_text_off_the_grid() -> None:
+    css = (ROOT / "assets" / "css" / "syntax.css").read_text(encoding="utf-8")
+    assert "var(--grid)" not in css, "muted comments on --grid are 4.29:1 in light mode"
