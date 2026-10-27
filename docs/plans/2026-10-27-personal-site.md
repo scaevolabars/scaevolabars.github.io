@@ -58,8 +58,8 @@ __pycache__/
       "vendor": "scripts/vendor.sh",
       "dev": ["scripts/vendor.sh", "hugo server --buildDrafts --disableFastRender"],
       "build": ["scripts/vendor.sh", "hugo --gc --minify --panicOnWarning"],
-      "test": "uv run pytest -m 'not content'",
-      "check-content": "uv run pytest -m content"
+      "test": "uv run --locked pytest -m 'not content'",
+      "check-content": "uv run --locked pytest -m content"
     }
   }
 }
@@ -72,6 +72,7 @@ Expected: `hugo v0.166.0...`
 
 ```bash
 uv init --bare --name scaevolabars-site
+uv python pin 3.12
 uv add --dev pytest beautifulsoup4
 ```
 
@@ -80,6 +81,7 @@ Then append to `pyproject.toml`:
 ```toml
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["--strict-markers"]
 markers = ["content: fails while PLACEHOLDER text remains in the built site"]
 ```
 

@@ -6,8 +6,8 @@
       "vendor": "scripts/vendor.sh",
       "dev": ["scripts/vendor.sh", "hugo server --buildDrafts --disableFastRender"],
       "build": ["scripts/vendor.sh", "hugo --gc --minify --panicOnWarning"],
-      "test": "uv run pytest -m 'not content'",
-      "check-content": "uv run pytest -m content"
+      "test": "uv run --locked pytest -m 'not content'",
+      "check-content": "uv run --locked pytest -m content"
     }
   }
 }
