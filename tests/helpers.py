@@ -35,6 +35,18 @@ def copy_site(dest: Path) -> Path:
     return dest
 
 
+def clear_entries(site: Path) -> None:
+    """Delete every post and note in a copied site. The section pages stay."""
+    for section in ("posts", "notes"):
+        for entry in (site / "content" / section).iterdir():
+            if entry.name == "_index.md":
+                continue
+            if entry.is_dir():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
+
+
 def parse(path: Path) -> BeautifulSoup:
     return BeautifulSoup(path.read_text(encoding="utf-8"), "html.parser")
 

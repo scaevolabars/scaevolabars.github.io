@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup, Tag
 
-from helpers import ROOT, copy_site, hugo_build, page, parse
+from helpers import ROOT, clear_entries, copy_site, hugo_build, page, parse
 
 CONFIG = tomllib.loads((ROOT / "hugo.toml").read_text(encoding="utf-8"))
 BASE_URL = CONFIG["baseURL"]
@@ -105,6 +105,28 @@ def test_home_lists_the_newest_entries(draft_site: Path, section: str, limit: in
     for li in block.select("li.entry"):
         day = date.fromisoformat(li.time["datetime"])
         assert li.select_one(".entry__date").get_text() == day.strftime("%d %b %Y")
+
+
+def test_home_shows_five_newest_posts_and_three_newest_notes(tmp_path: Path) -> None:
+    src = copy_site(tmp_path / "src")
+    clear_entries(src)
+    days = {
+        "posts": ["2024-03-01", "2025-11-30", "2023-07-15", "2025-01-02", "2024-12-31", "2022-05-05"],
+        "notes": ["2023-02-02", "2025-06-06", "2024-04-04", "2022-01-01"],
+    }
+    for section, dates in days.items():
+        for i, day in enumerate(dates):
+            (src / "content" / section / f"entry-{i}.md").write_text(
+                f'---\ntitle: "{section} {day}"\ndate: {day}\ntopics: [math]\n---\nText.\n',
+                encoding="utf-8",
+            )
+    result = hugo_build(src, tmp_path / "out")
+    assert result.returncode == 0, result.stderr + result.stdout
+    home = page(tmp_path / "out", "/")
+    for section, limit in (("posts", 5), ("notes", 3)):
+        block = home.select_one(f"section[aria-labelledby=latest-{section}]")
+        newest = sorted(days[section], reverse=True)[:limit]
+        assert entries(block) == [(date.fromisoformat(d), f"{section} {d}") for d in newest]
 
 
 @pytest.mark.parametrize("section", ["posts", "notes"])
