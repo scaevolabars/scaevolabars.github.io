@@ -1476,7 +1476,7 @@ mermaid.initialize({
     secondaryColor: token("--code-bg"),
     tertiaryColor: token("--code-bg"),
     lineColor: token("--ink"),
-    fontFamily: "Literata, Georgia, serif",
+    fontFamily: token("--serif"),
   },
 });
 
@@ -1512,6 +1512,11 @@ def test_code_is_highlighted_with_classes(draft_site: Path) -> None:
     assert all(el.get("style") is None for el in soup.select("pre.chroma, pre.chroma *"))
     css = next((draft_site / "css").glob("site.*.css")).read_text(encoding="utf-8")
     assert ".chroma .k" in css
+
+
+def test_syntax_colours_keep_muted_text_off_the_grid() -> None:
+    css = (ROOT / "assets" / "css" / "syntax.css").read_text(encoding="utf-8")
+    assert "var(--grid)" not in css, "muted comments on --grid are 4.29:1 in light mode"
 ```
 
 **Step 2: Run to verify it fails**
@@ -1532,7 +1537,7 @@ Expected: FAIL on `.chroma .k` (the Chroma markup itself already exists).
 .chroma .c, .chroma .ch, .chroma .cm, .chroma .c1, .chroma .cs, .chroma .cp, .chroma .cpf { color: var(--muted); }
 .chroma .gd { color: var(--muted); text-decoration: line-through; }
 .chroma .gi { font-weight: 700; }
-.chroma .hl { display: block; background: var(--grid); }
+.chroma .hl { display: block; box-shadow: inset 3px 0 var(--pencil); }
 .chroma .err { text-decoration: underline wavy; }
 ```
 
