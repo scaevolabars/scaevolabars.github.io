@@ -1325,10 +1325,10 @@ def test_sidenote_is_inline_and_toggleable(draft_site: Path) -> None:
 Run: `devbox run -- uv run pytest tests/test_features.py -v`
 Expected: FAIL (`toggle is None`).
 
-**Step 3: Write `layouts/_shortcodes/note.html`** (one line, so no whitespace enters the paragraph; the call position gives a unique id, also for a note nested in another shortcode, where `.Ordinal` would repeat; CSS counters give the visible number)
+**Step 3: Write `layouts/_shortcodes/note.html`** (one line, so no whitespace enters the paragraph; the call position gives a unique id; for a note inside another shortcode, Hugo reports the position relative to the parent's inner text, so the parent's position is added; CSS counters give the visible number)
 
 ```html
-{{- $id := printf "note-%d-%d" .Position.LineNumber .Position.ColumnNumber -}}<input type="checkbox" class="note-toggle" id="{{ $id }}"><label class="note-ref" for="{{ $id }}"><span class="vh">Note </span></label><span class="note" role="note">{{ .Inner | .Page.RenderString }}</span>{{- /* end */ -}}
+{{- $id := printf "note-%d-%d" .Position.LineNumber .Position.ColumnNumber -}}{{- with .Parent }}{{ $id = printf "%s-%d-%d" $id .Position.LineNumber .Position.ColumnNumber }}{{ end -}}<input type="checkbox" class="note-toggle" id="{{ $id }}"><label class="note-ref" for="{{ $id }}"><span class="vh">Note </span></label><span class="note" role="note">{{ .Inner | .Page.RenderString }}</span>{{- /* end */ -}}
 ```
 
 **Step 4: Run the tests**
@@ -1575,20 +1575,14 @@ def test_projects_render_from_data(prod_site: Path) -> None:
     project = page(prod_site, "/projects/").select_one("section.project")
     assert project.select_one("h2.project__name") is not None
     assert project.select_one(".project__links a")["href"].startswith("https://")
-
-
-def test_feed_lists_only_posts_and_notes(draft_site: Path) -> None:
-    feed = (draft_site / "index.xml").read_text(encoding="utf-8")
-    assert "/posts/sample-features/" in feed
-    assert "/notes/sample-note/" in feed
-    for path in ("/about/", "/cv/", "/projects/"):
-        assert path not in feed
 ```
+
+(The feed scope is already tested in Task 3: `test_lists_and_feeds_leave_out_profile_pages`.)
 
 **Step 2: Run to verify they fail**
 
 Run: `devbox run -- uv run pytest tests/test_profile.py -v`
-Expected: the CV and projects tests FAIL; the feed test may already pass (it guards the post-and-note scope of `layouts/home.rss.xml` from Task 3).
+Expected: the CV and projects tests FAIL.
 
 **Step 3: Write `data/cv.yaml`**
 
@@ -1847,7 +1841,7 @@ devbox run -- hugo new content notes/paper-name.md  # new paper note, starts as 
 devbox run dev                                      # preview with drafts at http://localhost:1313
 ```
 
-Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hugo.toml`; any other topic fails the build.
+Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hugo.toml`; any other topic fails the build. Raw HTML in Markdown also fails the build: put code such as `vector<T>` in backticks.
 
 - Sidenote: `text{{< note >}}Note text.{{< /note >}} more text`
 - Math: `$inline$` and `$$display$$`. Write `\$` for a literal dollar sign.
