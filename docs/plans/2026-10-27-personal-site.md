@@ -217,6 +217,8 @@ git commit -m "Add scripts for pinned vendor files and font subsets"
 
 ### Task 3: Test harness, config and core templates
 
+> **As built (commit 33130f6 and the review fixes after it):** the code is the reference for Task 3, not the blocks below. It differs in these points: `locale` replaces the deprecated `languageCode`; the paper-note field is `link`, because `url` is a reserved Hugo key; `layouts/home.rss.xml` limits the feed to posts and notes, so about/cv/projects stay in the sitemap (no `build.list`); a front-matter check runs from `baseof.html`; the tests check properties, not the exact sample content.
+
 **Files:**
 - Create: `tests/helpers.py`, `tests/conftest.py`, `tests/test_core.py`
 - Create: `hugo.toml`
@@ -1323,10 +1325,10 @@ def test_sidenote_is_inline_and_toggleable(draft_site: Path) -> None:
 Run: `devbox run -- uv run pytest tests/test_features.py -v`
 Expected: FAIL (`toggle is None`).
 
-**Step 3: Write `layouts/_shortcodes/note.html`** (one line, so no whitespace enters the paragraph; `.Ordinal` gives a unique id, CSS counters give the visible number)
+**Step 3: Write `layouts/_shortcodes/note.html`** (one line, so no whitespace enters the paragraph; the call position gives a unique id, also for a note nested in another shortcode, where `.Ordinal` would repeat; CSS counters give the visible number)
 
 ```html
-{{- $id := printf "note-%d" .Ordinal -}}<input type="checkbox" class="note-toggle" id="{{ $id }}"><label class="note-ref" for="{{ $id }}"><span class="vh">Note </span></label><span class="note" role="note">{{ .Inner | .Page.RenderString }}</span>{{- /* end */ -}}
+{{- $id := printf "note-%d-%d" .Position.LineNumber .Position.ColumnNumber -}}<input type="checkbox" class="note-toggle" id="{{ $id }}"><label class="note-ref" for="{{ $id }}"><span class="vh">Note </span></label><span class="note" role="note">{{ .Inner | .Page.RenderString }}</span>{{- /* end */ -}}
 ```
 
 **Step 4: Run the tests**
@@ -1363,7 +1365,19 @@ def test_math_renders_at_build_time(draft_site: Path) -> None:
 
 def test_pages_without_math_skip_katex_css(prod_site: Path) -> None:
     assert page(prod_site, "/about/").select_one("link[href*=katex]") is None
+
+
+def test_katex_css_matches_the_katex_inside_hugo() -> None:
+    """Hugo renders math with its bundled KaTeX, so the vendored CSS must be the same version."""
+    hugo = subprocess.run(["hugo", "version"], capture_output=True, text=True, check=True).stdout
+    assert hugo.startswith("hugo v0.166."), (
+        "Hugo changed: look up the KaTeX version it bundles and update KATEX_VERSION in scripts/vendor.sh"
+    )
+    css = (ROOT / "static" / "vendor" / "katex" / "katex.min.css").read_text(encoding="utf-8")
+    assert 'content:"0.18.4"' in css
 ```
+
+(Add `import subprocess` to the imports at the top of the file, and import `ROOT` from `helpers` next to `page`.)
 
 **Step 2: Run to verify they fail**
 
@@ -1422,15 +1436,14 @@ def test_diagram_module_imports_vendored_mermaid(draft_site: Path) -> None:
     assert (draft_site / target.lstrip("/")).is_file()
 
 
-def test_pages_without_diagrams_have_no_javascript(prod_site: Path, draft_site: Path) -> None:
+def test_only_pages_with_diagrams_load_javascript(prod_site: Path, draft_site: Path) -> None:
     for site in (prod_site, draft_site):
         for html in site.rglob("*.html"):
-            if html.parent.name == "sample-features":
-                continue
-            assert "<script" not in html.read_text(encoding="utf-8"), html
+            soup = BeautifulSoup(html.read_text(encoding="utf-8"), "html.parser")
+            assert bool(soup.select("script")) == bool(soup.select("pre.mermaid")), html
 ```
 
-(Move `import re` to the top of the file.)
+(Move `import re` to the top of the file, and add `from bs4 import BeautifulSoup`. The test checks a property, not page names, so a real post with a diagram passes.)
 
 **Step 2: Run to verify they fail**
 
@@ -1575,7 +1588,7 @@ def test_feed_lists_only_posts_and_notes(draft_site: Path) -> None:
 **Step 2: Run to verify they fail**
 
 Run: `devbox run -- uv run pytest tests/test_profile.py -v`
-Expected: the CV and projects tests FAIL; the feed test may already pass (it guards `build.list: never`).
+Expected: the CV and projects tests FAIL; the feed test may already pass (it guards the post-and-note scope of `layouts/home.rss.xml` from Task 3).
 
 **Step 3: Write `data/cv.yaml`**
 
@@ -1619,7 +1632,7 @@ sections:
 **Step 5: Write `layouts/_shortcodes/cv.html`**
 
 ```html
-{{- with site.Data.cv }}
+{{- with hugo.Data.cv }}
 {{- with .pdf }}
 <p class="cv-pdf"><a href="{{ . | relURL }}">Download the CV as PDF</a></p>
 {{- end }}
@@ -1640,7 +1653,7 @@ sections:
 **Step 6: Write `layouts/_shortcodes/projects.html`**
 
 ```html
-{{- range site.Data.projects }}
+{{- range hugo.Data.projects }}
 <section class="project">
   <h2 class="project__name">{{ .name }} <span class="project__year">{{ .year }}</span></h2>
   {{ $.Page.RenderString (dict "display" "block") .text }}
@@ -1892,7 +1905,7 @@ Run: `uv run --with playwright python <scratchpad>/shots.py`
 
 Do not do these without the owner's answer:
 
-1. **Content:** the owner replaces every `PLACEHOLDER` (home intro, about, CV, projects) or gives the facts to fill in.
+1. **Content:** the owner replaces every `PLACEHOLDER` (home intro, about, CV, projects) or gives the facts to fill in. Only the owner supplies contact data: never fill in an email address or other personal data from git config or any other source.
 2. **Pages source:** before the merge, switch GitHub Pages from the legacy branch build to GitHub Actions. Otherwise the legacy Jekyll build runs on the Hugo files:
    `gh api -X PUT repos/scaevolabars/scaevolabars.github.io/pages -f build_type=workflow`
 3. **Integrate:** merge `hugo-site` into `master`, open a PR, or keep the branch (superpowers:finishing-a-development-branch).

@@ -30,7 +30,7 @@ Navigation: Writing, Notes, Projects, CV, About.
 content/
   _index.md     Home: 2-3 sentence intro, 5 latest posts, 3 latest notes
   posts/        Long posts. Front matter: title, date, topics, description, draft
-  notes/        Paper notes. Adds: paper, authors, year, url
+  notes/        Paper notes. Adds: paper, authors, year, link
   projects.md   Renders data/projects.yaml (name, year, text, links)
   cv.md         Renders data/cv.yaml; links static/cv.pdf if present
   about.md      Free Markdown
