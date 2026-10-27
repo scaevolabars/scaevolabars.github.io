@@ -1,0 +1,6 @@
+{{ define "main" }}
+<div class="wrap">
+  <h1 class="page-title">{{ partial "title.html" . }}</h1>
+  {{ partial "entry-list.html" (dict "pages" .Pages "format" "02 Jan 2006") }}
+</div>
+{{ end }}

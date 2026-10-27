@@ -1,0 +1,5 @@
+{{- range .Params.topics -}}
+  {{- if not (isset site.Params.topics .) -}}
+    {{- errorf "%s: unknown topic %q. Use a slug from params.topics in hugo.toml." $.File.Path . -}}
+  {{- end -}}
+{{- end -}}

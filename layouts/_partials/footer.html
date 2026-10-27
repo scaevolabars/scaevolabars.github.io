@@ -1,0 +1,11 @@
+<footer class="foot">
+  <div class="wrap">
+    <ul>
+      <li>{{ site.Title }}, {{ now.Year }}</li>
+      <li><a href="{{ "index.xml" | relURL }}">RSS feed</a></li>
+      {{- with site.Params.github }}
+      <li><a href="https://github.com/{{ . }}">GitHub</a></li>
+      {{- end }}
+    </ul>
+  </div>
+</footer>

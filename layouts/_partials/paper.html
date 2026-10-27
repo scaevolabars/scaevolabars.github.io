@@ -1,0 +1,3 @@
+{{- with .Params.paper }}
+<p class="paper">Notes on {{ with $.Params.link }}<a href="{{ . }}">{{ $.Params.paper }}</a>{{ else }}{{ . }}{{ end }}{{ with $.Params.authors }}, {{ . }}{{ end }}{{ with $.Params.year }} ({{ . }}){{ end }}.</p>
+{{- end }}

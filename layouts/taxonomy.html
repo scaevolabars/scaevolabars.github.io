@@ -1,0 +1,12 @@
+{{ define "main" }}
+<div class="wrap">
+  <h1 class="page-title">Topics</h1>
+  <ul class="topic-list">
+    {{- range $slug, $name := site.Params.topics }}
+    {{- with site.GetPage (printf "/topics/%s" $slug) }}
+    <li><a href="{{ .RelPermalink }}">{{ $name }}</a> <span class="count">{{ len .Pages }}</span></li>
+    {{- end }}
+    {{- end }}
+  </ul>
+</div>
+{{ end }}

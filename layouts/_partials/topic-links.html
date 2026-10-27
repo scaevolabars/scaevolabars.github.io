@@ -1,0 +1,4 @@
+{{- range $i, $t := . -}}
+{{- if $i }}, {{ end -}}
+<a href="{{ printf "topics/%s/" (urlize $t) | relURL }}">{{ index site.Params.topics $t | default $t }}</a>
+{{- end -}}

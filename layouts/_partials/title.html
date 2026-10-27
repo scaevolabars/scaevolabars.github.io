@@ -1,0 +1,5 @@
+{{- $title := .Title -}}
+{{- if eq .Kind "term" -}}
+  {{- with index site.Params.topics .Data.Term -}}{{- $title = . -}}{{- end -}}
+{{- end -}}
+{{- return $title -}}

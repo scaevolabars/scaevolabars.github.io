@@ -1,0 +1,54 @@
+baseURL = "https://scaevolabars.github.io/"
+locale = "en"
+title = "Sergey Bars"
+enableRobotsTXT = true
+
+[params]
+  description = "Sergey Bars writes about trading systems, low-latency C++ and Rust, GPUs, foundation models, robotics, physics and math."
+  github = "scaevolabars"
+
+  # Allowed topics: slug = display name. Any other topic fails the build.
+  [params.topics]
+    trading = "Trading systems"
+    low-latency = "Low-latency C++/Rust"
+    gpu = "GPU / CUDA"
+    algorithms = "Algorithms"
+    math = "Math"
+    physics = "Physics"
+    foundation-models = "Foundation models"
+    robotics = "Robotics"
+
+[taxonomies]
+  topic = "topics"
+
+[markup]
+  [markup.goldmark.extensions.passthrough]
+    enable = true
+    [markup.goldmark.extensions.passthrough.delimiters]
+      block = [['$$', '$$'], ['\[', '\]']]
+      inline = [['$', '$'], ['\(', '\)']]
+  [markup.highlight]
+    noClasses = false
+    codeFences = true
+    guessSyntax = false
+
+[[menus.main]]
+  name = "Writing"
+  pageRef = "/posts"
+  weight = 10
+[[menus.main]]
+  name = "Notes"
+  pageRef = "/notes"
+  weight = 20
+[[menus.main]]
+  name = "Projects"
+  pageRef = "/projects"
+  weight = 30
+[[menus.main]]
+  name = "CV"
+  pageRef = "/cv"
+  weight = 40
+[[menus.main]]
+  name = "About"
+  pageRef = "/about"
+  weight = 50

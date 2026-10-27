@@ -1,0 +1,23 @@
+{{- $here := .RelPermalink -}}
+<header class="band{{ if .IsHome }} band--home{{ end }}">
+  <div class="wrap band__bar">
+    {{- if not .IsHome }}
+    <a class="band__name" href="{{ "/" | relURL }}">{{ site.Title }}</a>
+    {{- end }}
+    <nav class="band__nav" aria-label="Main">
+      <ul>
+        {{- range site.Menus.main }}
+        {{- $exact := eq $here .URL }}
+        {{- $inside := and (not $exact) (hasPrefix $here .URL) }}
+        <li><a href="{{ .URL }}"{{ if $exact }} aria-current="page"{{ else if $inside }} aria-current="true"{{ end }}>{{ .Name }}</a></li>
+        {{- end }}
+      </ul>
+    </nav>
+  </div>
+  {{- if .IsHome }}
+  <div class="wrap band__intro">
+    <h1 class="band__title">{{ site.Title }}</h1>
+    <div class="band__lede">{{ .Content }}</div>
+  </div>
+  {{- end }}
+</header>
