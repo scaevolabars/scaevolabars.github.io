@@ -22,7 +22,7 @@
 
 **Files:**
 - Delete: every tracked file except `docs/`
-- Create: `.gitignore`, `devbox.json`, `pyproject.toml`, `uv.lock`
+- Create: `.gitignore`, `devbox.json`, `devbox.lock`, `.python-version`, `pyproject.toml`, `uv.lock`
 
 **Step 1: Remove al-folio**
 
@@ -169,6 +169,7 @@ set -euo pipefail
 
 GOOGLE_FONTS_REV=ddf386ba1b9fbc6b2c818f1ddcd9148f54ced94b
 FONTTOOLS_VERSION=4.68.0
+BROTLI_VERSION=1.2.1
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="$root/static/fonts"
@@ -189,8 +190,8 @@ cyrillic="U+0400-045F,U+0490-0491,U+04B0-04B1"
 mono="U+0000-017F,U+0370-03FF,U+0400-045F,U+2000-206F,U+2070-209F,U+20AC,U+2190-21FF,U+2200-22FF,U+2500-257F,U+25A0-25FF"
 
 subset() {
-  uvx --from "fonttools[woff]==$FONTTOOLS_VERSION" pyftsubset "$1" --unicodes="$2" \
-    --layout-features='*' --flavor=woff2 --output-file="$3"
+  uvx --from "fonttools[woff]==$FONTTOOLS_VERSION" --with "brotli==$BROTLI_VERSION" \
+    pyftsubset "$1" --unicodes="$2" --layout-features='*' --flavor=woff2 --output-file="$3"
 }
 
 subset "$tmp/literata.ttf" "$latin" "$out/literata.woff2"
@@ -202,7 +203,7 @@ cp "$tmp/Literata-OFL.txt" "$tmp/JetBrainsMono-OFL.txt" "$out/"
 ls -l "$out"
 ```
 
-Run: `chmod +x scripts/fonts.sh && scripts/fonts.sh`
+Run: `chmod +x scripts/fonts.sh && devbox run -- scripts/fonts.sh`
 Expected: five `.woff2` files and two OFL texts. Check sizes; if `literata.woff2` is over ~300 KB, report it before going on (option: drop the `opsz` axis with `fonttools varLib.instancer`).
 
 **Step 3: Commit**
