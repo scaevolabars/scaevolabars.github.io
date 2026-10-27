@@ -1,5 +1,8 @@
+import re
 import subprocess
 from pathlib import Path
+
+from bs4 import BeautifulSoup
 
 from helpers import ROOT, copy_site, hugo_build, page
 
@@ -54,3 +57,22 @@ def test_katex_css_matches_the_katex_inside_hugo() -> None:
     )
     css = (ROOT / "static" / "vendor" / "katex" / "katex.min.css").read_text(encoding="utf-8")
     assert 'content:"0.18.4"' in css
+
+
+def test_diagram_page_loads_mermaid_module(draft_site: Path) -> None:
+    soup = page(draft_site, SAMPLE)
+    assert soup.select_one("pre.mermaid") is not None
+    assert [(s.get("type"), s.get("src")) for s in soup.select("script")] == [("module", "/js/diagrams.mjs")]
+
+
+def test_diagram_module_imports_vendored_mermaid(draft_site: Path) -> None:
+    js = (draft_site / "js" / "diagrams.mjs").read_text(encoding="utf-8")
+    target = re.search(r'from "(/vendor/[^"]+)"', js).group(1)
+    assert (draft_site / target.lstrip("/")).is_file()
+
+
+def test_only_pages_with_diagrams_load_javascript(prod_site: Path, draft_site: Path) -> None:
+    for site in (prod_site, draft_site):
+        for html in site.rglob("*.html"):
+            soup = BeautifulSoup(html.read_text(encoding="utf-8"), "html.parser")
+            assert bool(soup.select("script")) == bool(soup.select("pre.mermaid")), html
