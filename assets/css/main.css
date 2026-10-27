@@ -1,3 +1,245 @@
+/* Engineering computation pad. Tokens are read by tests/test_style.py. */
+
 /* tokens:light */
-:root { --paper: #EEF2E9; --grid: #CFDACB; --ink: #22272B; --muted: #5B635D; --pencil: #2B5C8F; --code-bg: #E3E9DF; }
+:root {
+  --paper: #EEF2E9;
+  --grid: #CFDACB;
+  --ink: #22272B;
+  --muted: #5B635D;
+  --pencil: #2B5C8F;
+  --code-bg: #E3E9DF;
+}
 /* end tokens */
+
+@media (prefers-color-scheme: dark) {
+  /* tokens:dark */
+  :root {
+    --paper: #1C211E;
+    --grid: #2A322D;
+    --ink: #DDE4DA;
+    --muted: #9AA59C;
+    --pencil: #93B8E0;
+    --code-bg: #232A26;
+  }
+  /* end tokens */
+}
+
+:root {
+  color-scheme: light dark;
+  --serif: "Literata", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --measure: 66ch;
+  --note-width: 15rem;
+  --note-gap: 2.5rem;
+  --gutter: 1.25rem;
+  --cell: 5mm;
+}
+
+/* Fonts: self-hosted subsets, SIL Open Font License. Ranges match scripts/fonts.sh. */
+@font-face {
+  font-family: "Literata";
+  src: url("/fonts/literata.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-017F, U+0370-03FF, U+2000-206F, U+2070-209F, U+20AC, U+2100-214F, U+2190-21FF, U+2200-22FF, U+25A0-25FF, U+FFFD;
+}
+@font-face {
+  font-family: "Literata";
+  src: url("/fonts/literata-cyrillic.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1;
+}
+@font-face {
+  font-family: "Literata";
+  src: url("/fonts/literata-italic.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0000-017F, U+0370-03FF, U+2000-206F, U+2070-209F, U+20AC, U+2100-214F, U+2190-21FF, U+2200-22FF, U+25A0-25FF, U+FFFD;
+}
+@font-face {
+  font-family: "Literata";
+  src: url("/fonts/literata-italic-cyrillic.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Base */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  font-optical-sizing: auto;
+}
+a { color: var(--pencil); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--pencil); outline-offset: 2px; }
+h1, h2, h3, h4 { font-weight: 650; line-height: 1.2; text-wrap: balance; }
+code, kbd, pre { font-family: var(--mono); font-size: 0.875em; }
+
+.skip { position: absolute; top: -4rem; left: 1rem; z-index: 10; padding: 0.5rem 0.75rem; background: var(--paper); color: var(--ink); }
+.skip:focus { top: 1rem; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.wrap {
+  max-width: calc(var(--measure) + var(--note-gap) + var(--note-width) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Grid band: the one bold element. Only ink and pencil text sit on it. */
+.band {
+  background-image:
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+  border-bottom: 2px solid var(--grid);
+}
+.band__bar { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem; padding-block: 1rem; }
+.band--home .band__bar { justify-content: flex-end; }
+.band__name { color: var(--ink); font-weight: 650; text-decoration: none; }
+.band__nav ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 0; padding: 0; list-style: none; }
+.band__nav a { color: var(--ink); text-decoration: none; }
+.band__nav a:hover,
+.band__nav a[aria-current] { text-decoration: underline 2px var(--pencil); text-underline-offset: 0.3em; }
+.band__intro { padding-block: 2.5rem 3.5rem; }
+.band__title { margin: 0 0 1.25rem; font-size: clamp(2.75rem, 8vw, 4.5rem); font-weight: 800; line-height: 1; letter-spacing: -0.015em; }
+.band__lede { max-width: var(--measure); font-size: 1.25rem; line-height: 1.55; }
+.band__lede p { margin: 0 0 0.75em; }
+.band__lede p:last-child { margin-bottom: 0; }
+
+/* Page */
+main { padding-block: 2.5rem 4rem; }
+.page-title { max-width: var(--measure); margin: 0 0 1.5rem; font-size: clamp(1.9rem, 4.5vw, 2.5rem); line-height: 1.15; }
+.entry-head { margin-bottom: 2rem; }
+.entry-head .page-title { margin-bottom: 0.5rem; }
+.meta { margin: 0; color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
+.meta a { color: inherit; }
+.paper { max-width: var(--measure); margin: 0.5rem 0 0; }
+.empty { color: var(--muted); }
+.section-intro { margin-bottom: 2rem; }
+
+/* Prose */
+.prose { max-width: var(--measure); counter-reset: note; }
+.prose > :first-child { margin-top: 0; }
+.prose h2 { margin: 2.25em 0 0.6em; font-size: 1.5rem; }
+.prose h3 { margin: 1.9em 0 0.5em; font-size: 1.25rem; }
+.prose h4 { margin: 1.6em 0 0.5em; font-size: 1.125rem; }
+.prose ul, .prose ol { padding-left: 1.4em; }
+.prose li + li { margin-top: 0.25em; }
+.prose img { max-width: 100%; height: auto; }
+.prose blockquote { margin: 1.5em 0; padding-left: 1.25rem; border-left: 2px solid var(--grid); color: var(--muted); }
+.prose hr { margin: 2.5em 0; border: 0; border-top: 2px solid var(--grid); }
+.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 1rem; font-variant-numeric: lining-nums tabular-nums; }
+.prose th, .prose td { padding: 0.4rem 0.9rem 0.4rem 0; border-bottom: 1px solid var(--grid); text-align: left; vertical-align: top; }
+.prose th { border-bottom-width: 2px; font-weight: 650; }
+
+/* Code */
+:not(pre) > code { padding: 0.1em 0.3em; background: var(--code-bg); border-radius: 2px; }
+pre { overflow-x: auto; padding: 1rem 1.25rem; background: var(--code-bg); line-height: 1.5; tab-size: 4; border-radius: 2px; }
+.highlight, .prose > pre { margin: 1.5em 0; }
+.highlight pre { margin: 0; }
+pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
+
+/* Math */
+.katex { font-size: 1.05em; }
+.katex-display { margin: 1.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+/* Sidenotes: margin notes at 1100px and wider, tap-to-open below that. No JavaScript. */
+.note-toggle { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.note-ref { counter-increment: note; color: var(--pencil); cursor: pointer; }
+.note-ref::after { content: counter(note); padding-inline: 0.1em; font-size: 0.7em; line-height: 0; vertical-align: super; font-variant-numeric: lining-nums; }
+.note-toggle:focus-visible + .note-ref { outline: 2px solid var(--pencil); outline-offset: 2px; }
+.note { display: none; }
+.note::before { content: counter(note) "\2002"; color: var(--pencil); font-variant-numeric: lining-nums; }
+.note-toggle:checked + .note-ref + .note {
+  display: block;
+  margin: 0.75rem 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--grid);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+@media (min-width: 1100px) {
+  .note-toggle { display: none; }
+  .note-ref { cursor: auto; }
+  .note,
+  .note-toggle:checked + .note-ref + .note {
+    display: block;
+    float: right;
+    clear: right;
+    width: var(--note-width);
+    margin: 0.3rem calc(-1 * (var(--note-width) + var(--note-gap))) 0.75rem 0;
+    padding-left: 0;
+    border-left: 0;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+}
+
+/* Entry lists: date column, title, topics. */
+.latest + .latest { margin-top: 3rem; }
+.latest__title, .year__label { margin: 0 0 0.75rem; font-size: 1.25rem; }
+.latest__more { margin: 0.75rem 0 0; }
+.year + .year { margin-top: 2.5rem; }
+.entries {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 1.25rem;
+  row-gap: 0.6rem;
+  max-width: calc(var(--measure) + 8rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.entry { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
+.entry__date { color: var(--muted); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.entry__title { grid-column: 2; color: var(--ink); font-weight: 600; text-decoration: none; }
+.entry__title:hover { text-decoration: underline 1px; text-underline-offset: 0.18em; }
+.entry__topics { grid-column: 2; color: var(--muted); font-size: 0.9rem; }
+.entry__topics a { color: inherit; }
+
+.topic-list { margin: 0; padding: 0; list-style: none; }
+.topic-list li + li { margin-top: 0.4rem; }
+.topic-list .count { color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
+
+/* CV */
+.cv-pdf { margin-top: 0; }
+.cv-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.6rem 1.5rem; margin: 0; }
+.cv-list dt { color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
+.cv-list dd { margin: 0; }
+.cv-what { font-weight: 600; }
+.cv-text { display: block; }
+@media (max-width: 34rem) {
+  .cv-list { grid-template-columns: minmax(0, 1fr); row-gap: 0.1rem; }
+  .cv-list dd { margin-bottom: 0.9rem; }
+}
+
+/* Projects */
+.project + .project { margin-top: 2.5rem; }
+.prose .project__name { margin: 0 0 0.4rem; font-size: 1.25rem; }
+.project__year { color: var(--muted); font-weight: 400; font-variant-numeric: lining-nums; }
+.prose .project__links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 0.5rem 0 0; padding: 0; list-style: none; }
+.prose .project__links li + li { margin-top: 0; }
+
+/* Footer. The small size sits on the list, not on .foot, so the .wrap width (in ch) matches the page. */
+.foot { padding-block: 1.25rem 2.5rem; border-top: 2px solid var(--grid); color: var(--muted); }
+.foot ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0; padding: 0; list-style: none; font-size: 0.9rem; }
+.foot a { color: inherit; }
