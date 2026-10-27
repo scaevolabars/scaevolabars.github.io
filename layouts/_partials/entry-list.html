@@ -3,7 +3,7 @@
   <li class="entry">
     <time class="entry__date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format $.format }}</time>
     <a class="entry__title" href="{{ .RelPermalink }}">{{ .Title }}</a>
-    {{- with .Params.topics }}
+    {{- with .GetTerms "topics" }}
     <span class="entry__topics">{{ partial "topic-links.html" . }}</span>
     {{- end }}
   </li>

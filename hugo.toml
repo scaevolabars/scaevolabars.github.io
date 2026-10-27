@@ -1,5 +1,6 @@
 baseURL = "https://scaevolabars.github.io/"
 locale = "en"
+timeZone = "Europe/Moscow"
 title = "Sergey Bars"
 enableRobotsTXT = true
 

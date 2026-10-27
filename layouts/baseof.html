@@ -3,14 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{- if .IsPage }}{{ partial "check-front-matter.html" . }}{{ end }}
   {{- $title := partial "title.html" . }}
-  {{- $description := .Description | default site.Params.description }}
+  {{- $description := .Description }}
+  {{- if and (not $description) .IsPage }}
+    {{- $description = .Summary | plainify | htmlUnescape | replaceRE `\s+` " " | strings.TrimSpace | truncate 160 }}
+  {{- end }}
+  {{- $description = $description | default site.Params.description }}
   <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ $title }} | {{ site.Title }}{{ end }}</title>
   <meta name="description" content="{{ $description }}">
+  {{- if eq .Kind "404" }}
+  <meta name="robots" content="noindex">
+  {{- else }}
   <link rel="canonical" href="{{ .Permalink }}">
+  <meta property="og:url" content="{{ .Permalink }}">
+  {{- end }}
   <meta property="og:title" content="{{ $title }}">
   <meta property="og:description" content="{{ $description }}">
-  <meta property="og:url" content="{{ .Permalink }}">
   <meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#EEF2E9">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1C211E">

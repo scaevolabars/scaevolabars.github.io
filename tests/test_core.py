@@ -1,15 +1,42 @@
-import shutil
+import tomllib
+from datetime import date
 from pathlib import Path
 
 import pytest
+from bs4 import BeautifulSoup, Tag
 
-from helpers import ROOT, hugo_build, page
+from helpers import ROOT, copy_site, hugo_build, page, parse
 
+CONFIG = tomllib.loads((ROOT / "hugo.toml").read_text(encoding="utf-8"))
+BASE_URL = CONFIG["baseURL"]
 NAV = ["Writing", "Notes", "Projects", "CV", "About"]
 PAGES = ["/", "/posts/", "/notes/", "/about/", "/cv/", "/projects/", "/404.html"]
-COPY_IGNORE = shutil.ignore_patterns(
-    ".git", ".devbox", ".venv", "public", "resources", ".pytest_cache", "__pycache__"
-)
+PROFILE = ["about/", "cv/", "projects/"]
+SITES = ["prod_site", "draft_site"]
+# Draft fixtures, newest first. Only --buildDrafts builds have them.
+SAMPLES = {
+    "posts": ["Sample post with every feature", "Sample post from an earlier year"],
+    "notes": ["Sample note: Attention Is All You Need"],
+}
+BAD_FRONT_MATTER = {
+    "unknown topic": ("title: Bad\ndate: 2026-01-01\ntopics: [astrology]\n", 'unknown topic "astrology"'),
+    "topics not a list": ("title: Bad\ndate: 2026-01-01\ntopics: trading\n", "topics must be a list"),
+    "no date": ("title: Bad\ntopics: [trading]\n", "the date is missing"),
+    "empty title": ('title: ""\ndate: 2026-01-01\n', "the title is empty"),
+}
+
+
+def entries(soup: BeautifulSoup | Tag) -> list[tuple[date, str]]:
+    """(date, title) of each entry in a list, in page order."""
+    return [
+        (date.fromisoformat(li.time["datetime"]), li.select_one(".entry__title").get_text())
+        for li in soup.select("li.entry")
+    ]
+
+
+def in_order(titles: list[str], expected: list[str]) -> bool:
+    """Whether the `expected` titles that appear in `titles` keep their relative order."""
+    return [t for t in titles if t in expected] == [t for t in expected if t in titles]
 
 
 def test_production_build_writes_home(prod_site: Path) -> None:
@@ -25,6 +52,24 @@ def test_page_has_nav_skip_link_and_stylesheet(prod_site: Path, url: str) -> Non
     assert soup.select_one("link[rel=stylesheet][integrity]") is not None
 
 
+@pytest.mark.parametrize("site_fixture", SITES)
+def test_every_page_has_lang_one_h1_canonical_and_description(
+    site_fixture: str, request: pytest.FixtureRequest
+) -> None:
+    site = request.getfixturevalue(site_fixture)
+    for html in sorted(site.rglob("*.html")):
+        name = str(html.relative_to(site))
+        soup = parse(html)
+        assert soup.html.get("lang"), name
+        assert len(soup.find_all("h1")) == 1, name
+        assert soup.select_one("meta[name=description]")["content"].strip(), name
+        canonical = soup.select_one("link[rel=canonical]")
+        if name == "404.html":
+            assert canonical is None
+        else:
+            assert canonical["href"].startswith(BASE_URL), name
+
+
 def test_nav_marks_current_section(draft_site: Path) -> None:
     archive = page(draft_site, "/posts/")
     assert archive.select_one("nav.band__nav a[aria-current=page]").get_text() == "Writing"
@@ -34,36 +79,58 @@ def test_nav_marks_current_section(draft_site: Path) -> None:
 
 def test_home_band_holds_name_and_intro(prod_site: Path) -> None:
     band = page(prod_site, "/").select_one("header.band--home")
-    assert band.select_one("h1.band__title").get_text() == "Sergey Bars"
-    assert "trading systems" in band.select_one(".band__lede").get_text()
+    assert band.select_one("h1.band__title").get_text() == CONFIG["title"]
+    assert band.select_one(".band__lede").get_text(strip=True)
 
 
-def test_home_shows_empty_state_without_entries(prod_site: Path) -> None:
-    empties = page(prod_site, "/").select("p.empty")
+def test_empty_states(empty_site: Path) -> None:
+    empties = page(empty_site, "/").select("p.empty")
     assert len(empties) == 2
     assert empties[0].select_one('a[href="/index.xml"]') is not None
+    for url in ("/posts/", "/notes/", "/topics/"):
+        assert page(empty_site, url).select_one("p.empty") is not None, url
 
 
-def test_home_lists_latest_posts_and_notes(draft_site: Path) -> None:
-    soup = page(draft_site, "/")
-    posts = [a.get_text() for a in soup.select("section[aria-labelledby=latest-posts] .entry__title")]
-    assert posts == ["Sample post with every feature", "Sample post from an earlier year"]
-    notes = [a.get_text() for a in soup.select("section[aria-labelledby=latest-notes] .entry__title")]
-    assert notes == ["Sample note: Attention Is All You Need"]
+@pytest.mark.parametrize(("section", "limit"), [("posts", 5), ("notes", 3)])
+def test_home_lists_the_newest_entries(draft_site: Path, section: str, limit: int) -> None:
+    block = page(draft_site, "/").select_one(f"section[aria-labelledby=latest-{section}]")
+    latest = entries(block)
+    archive = entries(page(draft_site, f"/{section}/"))
+    assert 0 < len(latest) == min(limit, len(archive))
+    dates = [d for d, _ in latest]
+    assert dates == sorted((d for d, _ in archive), reverse=True)[: len(latest)]
+    titles = [t for _, t in latest]
+    assert set(titles) <= {t for _, t in archive}
+    assert in_order(titles, SAMPLES[section])
+    for li in block.select("li.entry"):
+        day = date.fromisoformat(li.time["datetime"])
+        assert li.select_one(".entry__date").get_text() == day.strftime("%d %b %Y")
 
 
-def test_archive_groups_posts_by_year_newest_first(draft_site: Path) -> None:
-    soup = page(draft_site, "/posts/")
-    assert [h.get_text() for h in soup.select("h2.year__label")] == ["2026", "2025"]
-    assert soup.select("section.year")[0].select_one(".entry__date").get_text() == "27 Oct"
+@pytest.mark.parametrize("section", ["posts", "notes"])
+def test_archive_groups_entries_by_year_newest_first(draft_site: Path, section: str) -> None:
+    soup = page(draft_site, f"/{section}/")
+    years = [h.get_text() for h in soup.select("h2.year__label")]
+    assert years and years == sorted(set(years), reverse=True)
+    for group in soup.select("section.year"):
+        year = group.select_one("h2.year__label").get_text()
+        for li in group.select("li.entry"):
+            day = date.fromisoformat(li.time["datetime"])
+            assert str(day.year) == year
+            assert li.select_one(".entry__date").get_text() == day.strftime("%d %b")
+    dates = [d for d, _ in entries(soup)]
+    assert dates == sorted(dates, reverse=True)
+    titles = [t for _, t in entries(soup)]
+    assert set(SAMPLES[section]) <= set(titles)
+    assert in_order(titles, SAMPLES[section])
 
 
 def test_post_shows_date_and_topic_links(draft_site: Path) -> None:
     meta = page(draft_site, "/posts/sample-features/").select_one("p.meta")
     assert meta.select_one("time")["datetime"] == "2026-10-27"
     assert meta.select_one("time").get_text() == "27 October 2026"
-    links = {a.get_text(): a["href"] for a in meta.select("a")}
-    assert links == {"Trading systems": "/topics/trading/", "Low-latency C++/Rust": "/topics/low-latency/"}
+    links = [(a.get_text(), a["href"]) for a in meta.select("a")]
+    assert links == [("Trading systems", "/topics/trading/"), ("Low-latency C++/Rust", "/topics/low-latency/")]
 
 
 def test_topic_page_uses_display_name(draft_site: Path) -> None:
@@ -73,16 +140,34 @@ def test_topic_page_uses_display_name(draft_site: Path) -> None:
     assert "Sample post with every feature" in soup.select_one(".entries").get_text()
 
 
-def test_unknown_topic_fails_the_build(tmp_path: Path) -> None:
-    src = tmp_path / "src"
-    shutil.copytree(ROOT, src, ignore=COPY_IGNORE)
-    (src / "content" / "posts" / "bad-topic.md").write_text(
-        "---\ntitle: Bad topic\ndate: 2026-01-01\ntopics: [astrology]\n---\nText.\n",
+def test_topic_index_counts_entries_with_a_label(draft_site: Path) -> None:
+    items = page(draft_site, "/topics/").select(".topic-list li")
+    assert items
+    for li in items:
+        count, label = li.select_one(".count").get_text().split(" ")
+        assert label == ("entry" if count == "1" else "entries")
+        assert int(count) == len(page(draft_site, li.a["href"]).select(".entries li"))
+
+
+@pytest.mark.parametrize(("front_matter", "message"), BAD_FRONT_MATTER.values(), ids=BAD_FRONT_MATTER.keys())
+def test_bad_front_matter_fails_the_build(tmp_path: Path, front_matter: str, message: str) -> None:
+    src = copy_site(tmp_path / "src")
+    (src / "content" / "posts" / "bad.md").write_text(f"---\n{front_matter}---\nText.\n", encoding="utf-8")
+    result = hugo_build(src, tmp_path / "out")
+    assert result.returncode != 0
+    assert f"posts/bad.md: {message}" in result.stderr + result.stdout
+
+
+def test_description_falls_back_to_summary(tmp_path: Path) -> None:
+    src = copy_site(tmp_path / "src")
+    (src / "content" / "posts" / "plain.md").write_text(
+        "---\ntitle: Plain\ndate: 2026-01-02\n---\nNo description. It's about `vector<T>`.\n\nSecond paragraph.\n",
         encoding="utf-8",
     )
     result = hugo_build(src, tmp_path / "out")
-    assert result.returncode != 0
-    assert 'unknown topic "astrology"' in result.stderr + result.stdout
+    assert result.returncode == 0, result.stderr + result.stdout
+    meta = page(tmp_path / "out", "/posts/plain/").select_one("meta[name=description]")
+    assert meta["content"] == "No description. It’s about vector<T>. Second paragraph."
 
 
 def test_note_shows_paper_reference(draft_site: Path) -> None:
@@ -92,9 +177,42 @@ def test_note_shows_paper_reference(draft_site: Path) -> None:
 
 
 def test_drafts_are_not_published(prod_site: Path) -> None:
-    assert not (prod_site / "posts" / "sample-features").exists()
-    assert not (prod_site / "notes" / "sample-note").exists()
+    for path in ("posts/sample-features", "posts/sample-older", "notes/sample-note"):
+        assert not (prod_site / path).exists(), path
+    for name in ("index.xml", "sitemap.xml", "index.html"):
+        assert "sample-" not in (prod_site / name).read_text(encoding="utf-8"), name
 
 
-def test_404_links_home(prod_site: Path) -> None:
-    assert page(prod_site, "/404.html").select_one('.prose a[href="/"]') is not None
+def test_sitemap_lists_profile_pages(prod_site: Path) -> None:
+    sitemap = (prod_site / "sitemap.xml").read_text(encoding="utf-8")
+    for path in PROFILE:
+        assert f"<loc>{BASE_URL}{path}</loc>" in sitemap, path
+
+
+@pytest.mark.parametrize("site_fixture", SITES)
+def test_lists_and_feeds_leave_out_profile_pages(site_fixture: str, request: pytest.FixtureRequest) -> None:
+    site = request.getfixturevalue(site_fixture)
+    for feed in site.rglob("*.xml"):
+        if feed.name == "sitemap.xml":
+            continue
+        text = feed.read_text(encoding="utf-8")
+        for path in PROFILE:
+            assert f"{BASE_URL}{path}" not in text, (str(feed.relative_to(site)), path)
+    profile = {f"/{path}" for path in PROFILE}
+    for html in site.rglob("*.html"):
+        links = {a["href"] for a in parse(html).select(".entries a, .topic-list a")}
+        assert not links & profile, str(html.relative_to(site))
+
+
+def test_robots_txt_points_to_sitemap(prod_site: Path) -> None:
+    lines = (prod_site / "robots.txt").read_text(encoding="utf-8").splitlines()
+    assert "User-agent: *" in lines
+    assert f"Sitemap: {BASE_URL}sitemap.xml" in lines
+
+
+def test_404_links_home_and_is_not_indexed(prod_site: Path) -> None:
+    soup = page(prod_site, "/404.html")
+    assert soup.select_one('.prose a[href="/"]') is not None
+    assert soup.select_one("meta[name=robots]")["content"] == "noindex"
+    assert soup.select_one("link[rel=canonical]") is None
+    assert soup.select_one('meta[property="og:url"]') is None
