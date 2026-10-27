@@ -50,7 +50,7 @@ __pycache__/
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.5/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.18.5/.schema/devbox.schema.json",
   "packages": ["hugo@0.166.0", "uv@0.12.22"],
   "shell": {
     "scripts": {
