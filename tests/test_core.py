@@ -192,20 +192,26 @@ def test_description_falls_back_to_summary(tmp_path: Path) -> None:
     assert meta["content"] == "No description. It’s about vector<T>. Second paragraph."
 
 
-def test_prose_table_scrolls_in_a_focusable_region(tmp_path: Path) -> None:
+def test_prose_tables_scroll_in_focusable_regions_with_distinct_labels(tmp_path: Path) -> None:
     src = copy_site(tmp_path / "src")
+    # Block attributes are off in hugo.toml; turn them on so a table can carry its own label.
+    with (src / "hugo.toml").open("a", encoding="utf-8") as config:
+        config.write("\n[markup.goldmark.parser.attribute]\n  block = true\n")
+    table = "| Venue | Fills |\n|---|---:|\n| A | 1,204 |\n"
+    body = f'{table}\n{table}\n{table}{{aria-label="Fills by venue"}}\n\n{table}{{title="Fills"}}\n'
     (src / "content" / "posts" / "table.md").write_text(
-        "---\ntitle: Table\ndate: 2026-01-02\n---\n| Venue | Fills |\n|---|---:|\n| A | 1,204 |\n",
-        encoding="utf-8",
+        f"---\ntitle: Table\ndate: 2026-01-02\n---\n{body}", encoding="utf-8"
     )
     result = hugo_build(src, tmp_path / "out")
     assert result.returncode == 0, result.stderr + result.stdout
-    table = page(tmp_path / "out", "/posts/table/").select_one(".prose table")
-    region = table.parent
-    assert region.name == "div" and region["class"] == ["table-scroll"]
-    assert region["role"] == "region" and region["tabindex"] == "0" and region["aria-label"] == "Table"
+    tables = page(tmp_path / "out", "/posts/table/").select(".prose table")
+    regions = [t.parent for t in tables]
+    for region in regions:
+        assert region.name == "div" and region["class"] == ["table-scroll"]
+        assert region["role"] == "region" and region["tabindex"] == "0"
+    assert [r["aria-label"] for r in regions] == ["Table 1", "Table 2", "Fills by venue", "Fills"]
     # Hugo's alignment output survives the wrapper. --minify drops the space after the colon.
-    assert [td.get("style", "").replace(" ", "") for td in table.select("tbody td")] == ["", "text-align:right"]
+    assert [td.get("style", "").replace(" ", "") for td in tables[0].select("tbody td")] == ["", "text-align:right"]
 
 
 def test_note_shows_paper_reference(draft_site: Path) -> None:

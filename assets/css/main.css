@@ -33,7 +33,7 @@
   --note-gap: 2.5rem;
   --gutter: 1.25rem;
   --cell: 19px; /* about 5 mm, in whole pixels so grid lines stay sharp */
-  --date-col: 6.25em; /* widest entry date, "08 May 2026", is 5.93em in Literata */
+  --date-col: 6.25em; /* widest "02 Jan 2006" date: 5.93em in Literata, 5.98em in Georgia */
 }
 
 /* Fonts: self-hosted subsets, SIL Open Font License. Ranges match scripts/fonts.sh. */
@@ -217,6 +217,7 @@ pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
   padding: 0;
   list-style: none;
 }
+.year .entries { --date-col: 3.6em; } /* archive dates have no year; widest "08 May": 3.40em */
 .entry { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
 .entry__date { color: var(--muted); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
 .entry__title { grid-column: 2; color: var(--ink); font-weight: 600; text-decoration: none; }

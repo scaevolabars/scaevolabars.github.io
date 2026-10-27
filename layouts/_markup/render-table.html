@@ -1,5 +1,7 @@
 {{- /* Hugo 0.166's embedded table hook, wrapped so a wide table scrolls and the keyboard can reach it. */ -}}
-<div class="table-scroll" role="region" tabindex="0" aria-label="Table">
+{{- /* Each region needs its own name: the table's aria-label or title attribute, else its number on the page. */ -}}
+{{- $label := or (index .Attributes "aria-label") (index .Attributes "title") (printf "Table %d" (add .Ordinal 1)) -}}
+<div class="table-scroll" role="region" tabindex="0" aria-label="{{ $label }}">
 <table
 	{{- range $k, $v := .Attributes }}
 		{{- if $v }}
