@@ -41,9 +41,11 @@ def in_order(titles: list[str], expected: list[str]) -> bool:
 
 
 @pytest.mark.parametrize("url", PAGES)
-def test_page_has_nav_skip_link_and_stylesheet(prod_site: Path, url: str) -> None:
+def test_page_has_nav_footer_skip_link_and_stylesheet(prod_site: Path, url: str) -> None:
     soup = page(prod_site, url)
     assert [a.get_text(strip=True) for a in soup.select("nav.band__nav a")] == NAV
+    github = f"https://github.com/{CONFIG['params']['github']}"
+    assert [a["href"] for a in soup.select("footer a")] == ["/index.xml", "/topics/", github]
     assert soup.select_one("a.skip")["href"] == "#main"
     assert soup.select_one("main#main") is not None
     assert soup.select_one("link[rel=stylesheet][integrity]") is not None
@@ -241,6 +243,11 @@ def test_lists_and_feeds_leave_out_profile_pages(site_fixture: str, request: pyt
     for html in site.rglob("*.html"):
         links = {a["href"] for a in parse(html).select(".entries a, .topic-list a")}
         assert not links & profile, str(html.relative_to(site))
+
+
+def test_home_has_the_only_feed(draft_site: Path) -> None:
+    # Sections, the topic index and topic pages are HTML only: see [outputs] in hugo.toml.
+    assert sorted(str(xml.relative_to(draft_site)) for xml in draft_site.rglob("*.xml")) == ["index.xml", "sitemap.xml"]
 
 
 def test_robots_txt_points_to_sitemap(prod_site: Path) -> None:

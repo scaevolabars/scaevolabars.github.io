@@ -38,5 +38,5 @@ def test_placeholder_scan_finds_feed_only_text(tmp_path: Path) -> None:
     result, out = build_post(tmp_path, "The PLACEHOLDER pattern in C++ is not template text.", front_matter)
     assert result.returncode == 0, result.stderr + result.stdout
     hits = placeholder_hits(out)
-    assert {"index.xml", "posts/index.xml", "topics/math/index.xml"} <= set(hits), hits
+    assert "index.xml" in hits, hits
     assert "posts/test-post/index.html" not in hits
