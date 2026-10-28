@@ -9,6 +9,8 @@ mermaid.initialize({
   startOnLoad: false,
   theme: "base",
   look: "classic",
+  layout: "dagre", // the default would load the 1.6 MB ELK layout engine
+  suppressErrorRendering: true, // a bad diagram keeps its source visible; the error goes to the console
   flowchart: { padding: 8 },
   themeVariables: {
     background: token("--paper"),
@@ -22,10 +24,27 @@ mermaid.initialize({
   },
 });
 
-await mermaid.run({ querySelector: "pre.mermaid" });
+// Measure labels in Literata, not in the fallback font.
+await document.fonts.ready;
 
-// Mermaid puts the natural width in the inline max-width. A diagram without one is left alone.
-for (const svg of document.querySelectorAll("pre.mermaid svg")) {
-  const natural = svg.style.maxWidth.endsWith("px") ? parseFloat(svg.style.maxWidth) : NaN;
-  if (Number.isFinite(natural)) svg.style.minWidth = `${MIN_SCALE * natural}px`;
+const blocks = [...document.querySelectorAll("pre.mermaid")];
+const sources = new Map(blocks.map((pre) => [pre, pre.textContent]));
+
+try {
+  await mermaid.run({ nodes: blocks });
+} catch (error) {
+  console.error("Mermaid could not draw a diagram:", error?.message ?? error);
+} finally {
+  for (const pre of blocks) {
+    const svg = pre.querySelector("svg");
+    if (!svg) {
+      // Mermaid empties a block it cannot draw: put the source back, with the code look.
+      pre.textContent = sources.get(pre);
+      pre.removeAttribute("data-processed");
+      continue;
+    }
+    // Mermaid puts the natural width in the inline max-width. A diagram without one is left alone.
+    const natural = svg.style.maxWidth.endsWith("px") ? parseFloat(svg.style.maxWidth) : NaN;
+    if (Number.isFinite(natural)) svg.style.minWidth = `${MIN_SCALE * natural}px`;
+  }
 }

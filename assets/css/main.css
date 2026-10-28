@@ -163,7 +163,8 @@ main { padding-block: 2.5rem 4rem; }
 pre { overflow-x: auto; padding: 1rem 1.25rem; background: var(--code-bg); border: 1px solid transparent; line-height: 1.5; tab-size: 4; border-radius: 2px; }
 .highlight, .prose > pre { margin: 1.5em 0; }
 .highlight pre { margin: 0; }
-pre.mermaid { padding: 0; background: none; font-family: var(--serif); }
+/* Diagram source keeps the code look until Mermaid has drawn it, or when JavaScript is off. */
+pre.mermaid[data-processed] { padding: 0; background: none; font-family: var(--serif); }
 
 /* Math. The .prose prefix wins over katex.min.css, which loads later. */
 .prose .katex { font-size: 1.1em; }
