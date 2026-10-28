@@ -1791,9 +1791,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: jetify-com/devbox-install-action@v0.15.0
+        with:
+          persist-credentials: false
+      - uses: jetify-com/devbox-install-action@8c6a66ed6273138b1915457069de78cb52fe3bd7  # v0.15.0
         with:
           devbox-version: 0.18.5
           enable-cache: true
@@ -1814,6 +1817,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write
@@ -1863,6 +1867,8 @@ devbox run check-content  # fails while "PLACEHOLDER:" text remains in the built
 ```
 
 ## Deploy
+
+One-time setting: set Settings → Pages → Build and deployment → Source to GitHub Actions before the first merge to `master`.
 
 Push to `master`. GitHub Actions tests, builds and deploys the site. The deploy stops while "PLACEHOLDER:" text remains. The check does not decode PDF files, so check a PDF CV by hand.
 
