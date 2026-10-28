@@ -9,6 +9,7 @@ mermaid.initialize({
   startOnLoad: false,
   theme: "base",
   look: "classic",
+  flowchart: { padding: 8 },
   themeVariables: {
     background: token("--paper"),
     primaryColor: token("--paper"),
