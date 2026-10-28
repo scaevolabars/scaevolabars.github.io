@@ -22,3 +22,5 @@
 .chroma .lntd:first-child pre { padding-right: 0.5rem; }
 .chroma .lntd:first-child .hl { margin-left: 0; padding-left: 0; border-left: 0; }
 .chroma .lnt, .chroma .ln { color: var(--muted); user-select: none; }
+/* Print wraps long lines, which would break the numbering, so the number column goes. */
+@media print { .chroma .lntd:first-child { display: none; } }

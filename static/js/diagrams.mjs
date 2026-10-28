@@ -35,12 +35,13 @@ try {
 } catch (error) {
   console.error("Mermaid could not draw a diagram:", error?.message ?? error);
 } finally {
-  for (const pre of blocks) {
+  for (const [i, pre] of blocks.entries()) {
     const svg = pre.querySelector("svg");
     if (!svg) {
       // Mermaid empties a block it cannot draw: put the source back, with the code look.
       pre.textContent = sources.get(pre);
       pre.removeAttribute("data-processed");
+      console.error(`Mermaid could not draw diagram ${i + 1} on this page; its source is shown instead.`);
       continue;
     }
     // Mermaid puts the natural width in the inline max-width. A diagram without one is left alone.

@@ -1,6 +1,4 @@
-{{- if and (eq .Type "inline") (ne .Inner (strings.TrimSpace .Inner)) }}
-  {{- errorf "%s: inline math starts or ends with a space: %q. For a dollar sign, write \\$." .Position .Inner }}
-{{- end }}
+{{- partial "check-inline-math.html" . }}
 {{- $opts := dict "output" "htmlAndMathml" "displayMode" (eq .Type "block") }}
 {{- with try (transform.ToMath .Inner $opts) }}
   {{- with .Err }}

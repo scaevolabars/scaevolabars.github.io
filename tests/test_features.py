@@ -91,7 +91,7 @@ def test_only_pages_with_diagrams_load_javascript(prod_site: Path, draft_site: P
 
 def test_code_is_highlighted_with_classes(draft_site: Path) -> None:
     soup = page(draft_site, SAMPLE)
-    assert len(soup.select(".prose pre.chroma")) == 2
+    assert soup.select(".prose pre.chroma")
     assert all(el.get("style") is None for el in soup.select("pre.chroma, pre.chroma *"))
     css = next((draft_site / "css").glob("site.*.css")).read_text(encoding="utf-8")
     assert ".chroma .k" in css

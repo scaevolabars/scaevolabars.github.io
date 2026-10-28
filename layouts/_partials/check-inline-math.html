@@ -1,0 +1,4 @@
+{{- /* Context: a passthrough render hook. "$5 and $10" is two prices, not math, so a space at either end fails the build. */ -}}
+{{- if and (eq .Type "inline") (ne .Inner (strings.TrimSpace .Inner)) }}
+  {{- errorf "%s: inline math starts or ends with a space: %q. For a dollar sign, write \\$." .Position .Inner }}
+{{- end -}}
