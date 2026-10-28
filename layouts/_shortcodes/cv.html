@@ -3,7 +3,12 @@
 <p class="cv-pdf"><a href="{{ . | relURL }}">Download the CV as PDF</a></p>
 {{- end }}
 {{- /* Print only: print hides the footer, so a printed CV needs its web addresses as text. */}}
-<p class="cv-contact"><a href="{{ site.Home.Permalink }}">{{ site.Home.Permalink | replaceRE `^https?://|/$` "" }}</a>{{ with site.Params.github }} · <a href="https://github.com/{{ . }}">github.com/{{ . }}</a>{{ end }}</p>
+<ul class="cv-contact">
+  <li><a href="{{ site.Home.Permalink }}">{{ site.Home.Permalink | replaceRE `^https?://|/$` "" }}</a></li>
+  {{- with site.Params.github }}
+  <li><a href="https://github.com/{{ . }}">github.com/{{ . }}</a></li>
+  {{- end }}
+</ul>
 {{- range .sections }}
 <section class="cv-section">
   <h2>{{ .title }}</h2>

@@ -34,6 +34,7 @@
   --gutter: 1.25rem;
   --cell: 19px; /* about 5 mm, in whole pixels so grid lines stay sharp */
   --date-col: 6.25em; /* widest "02 Jan 2006" date: 5.93em in Literata, 5.98em in Georgia */
+  --term-col: 6.25em; /* CV terms on one line: "Frameworks" 5.99em in Literata, "2008 – 2012" 5.67em in Georgia */
 }
 
 /* Fonts: self-hosted subsets, SIL Open Font License. Ranges match scripts/fonts.sh. */
@@ -233,7 +234,9 @@ pre.mermaid[data-processed] { padding: 0; background: none; font-family: var(--s
 /* CV */
 .cv-pdf { margin-top: 0; }
 .cv-contact { display: none; } /* print only: the footer with these links is hidden in print */
-.cv-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.6rem 1.5rem; margin: 0; }
+/* On screen the first section heading starts the page, so it sits under the title like a first paragraph. */
+@media screen { .prose > .cv-contact:first-child + .cv-section > h2 { margin-top: 0; } }
+.cv-list { display: grid; grid-template-columns: var(--term-col) minmax(0, 1fr); gap: 0.6rem 1.5rem; margin: 0; } /* fixed term column, so all sections line up */
 .cv-list dt { color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
 .cv-list dd { margin: 0; }
 .cv-what { font-weight: 600; }
@@ -261,7 +264,8 @@ pre.mermaid[data-processed] { padding: 0; background: none; font-family: var(--s
   :root { color-scheme: light; }
   body, .band { background: none; }
   .band__nav, .skip, .note-toggle, .cv-pdf, .foot { display: none; }
-  .cv-contact { display: block; }
+  .prose .cv-contact { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0; padding: 0; list-style: none; } /* like the footer list */
+  .prose .cv-contact li + li { margin-top: 0; }
   .wrap { max-width: none; padding-inline: 0; }
   main { padding-block: 1.5rem 2rem; }
   pre { white-space: pre-wrap; overflow-wrap: anywhere; border-color: var(--grid); }

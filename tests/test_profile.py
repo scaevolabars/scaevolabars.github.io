@@ -27,12 +27,12 @@ def test_cv_renders_sections_from_data(prod_site: Path) -> None:
 
 
 def test_printed_cv_shows_site_and_github_addresses(prod_site: Path) -> None:
-    # Print hides the footer, so the CV carries the addresses as visible text.
-    contact = page(prod_site, "/cv/").select_one("p.cv-contact")
-    links = contact.select("a")
+    # Print hides the footer, so the CV lists the addresses as visible text, one per item like the footer.
+    items = page(prod_site, "/cv/").select("ul.cv-contact > li")
+    links = [li.select_one("a") for li in items]
     assert [a["href"] for a in links] == [CONFIG["baseURL"], f"https://github.com/{CONFIG['params']['github']}"]
-    for a in links:
-        assert a.get_text() == a["href"].removeprefix("https://").rstrip("/")
+    for li, a in zip(items, links):
+        assert li.get_text() == a.get_text() == a["href"].removeprefix("https://").rstrip("/")
 
 
 def test_projects_render_from_data(prod_site: Path) -> None:
