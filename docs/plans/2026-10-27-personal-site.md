@@ -1849,7 +1849,7 @@ devbox run dev                                      # preview with drafts at htt
 Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hugo.toml`; any other topic fails the build. Raw HTML in Markdown also fails the build: put code such as `vector<T>` in backticks.
 
 - Sidenote: `text{{< note >}}Note text.{{< /note >}} more text`
-- Math: `$inline$` and `$$display$$`. Write `\$` for a literal dollar sign.
+- Math: `$inline$` and `$$display$$`. Write `\$` for a literal dollar sign in text; inline math that starts or ends with a space fails the build, which catches prices such as `$5 and $10`. Inside a formula, write `\textdollar` for a dollar sign.
 - Diagram: a fenced code block with the language `mermaid`.
 - CV: `data/cv.yaml`. Projects: `data/projects.yaml`. For a PDF CV, put it in `static/` and set `pdf` in `data/cv.yaml`.
 
