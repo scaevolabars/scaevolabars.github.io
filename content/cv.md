@@ -1,4 +1,4 @@
 ---
 title: "CV"
 ---
-PLACEHOLDER
+{{< cv >}}

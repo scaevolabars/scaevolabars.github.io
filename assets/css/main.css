@@ -232,6 +232,7 @@ pre.mermaid[data-processed] { padding: 0; background: none; font-family: var(--s
 
 /* CV */
 .cv-pdf { margin-top: 0; }
+.cv-contact { display: none; } /* print only: the footer with these links is hidden in print */
 .cv-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.6rem 1.5rem; margin: 0; }
 .cv-list dt { color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
 .cv-list dd { margin: 0; }
@@ -260,6 +261,7 @@ pre.mermaid[data-processed] { padding: 0; background: none; font-family: var(--s
   :root { color-scheme: light; }
   body, .band { background: none; }
   .band__nav, .skip, .note-toggle, .cv-pdf, .foot { display: none; }
+  .cv-contact { display: block; }
   .wrap { max-width: none; padding-inline: 0; }
   main { padding-block: 1.5rem 2rem; }
   pre { white-space: pre-wrap; overflow-wrap: anywhere; border-color: var(--grid); }

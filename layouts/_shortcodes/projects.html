@@ -1,0 +1,13 @@
+{{- range hugo.Data.projects }}
+<section class="project">
+  <h2 class="project__name">{{ .name }} <span class="project__year">{{ .year }}</span></h2>
+  {{ $.Page.RenderString (dict "display" "block") .text }}
+  {{- with .links }}
+  <ul class="project__links">
+    {{- range . }}
+    <li><a href="{{ .url }}">{{ .label }}</a></li>
+    {{- end }}
+  </ul>
+  {{- end }}
+</section>
+{{- end }}

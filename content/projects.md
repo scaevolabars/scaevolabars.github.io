@@ -1,4 +1,4 @@
 ---
 title: "Projects"
 ---
-PLACEHOLDER
+{{< projects >}}

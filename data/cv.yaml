@@ -1,0 +1,22 @@
+# CV for /cv/. Replace every PLACEHOLDER value. Entries are listed as written.
+# pdf: a file under static/, for example "cv.pdf". Leave it empty for no PDF link.
+pdf: ""
+sections:
+  - title: Experience
+    entries:
+      - when: "PLACEHOLDER: 2024 – now"
+        what: "PLACEHOLDER: Role"
+        where: "PLACEHOLDER: Company"
+        text: "PLACEHOLDER: one or two sentences on the work and its result."
+  - title: Education
+    entries:
+      - when: "PLACEHOLDER: years"
+        what: "PLACEHOLDER: Degree, field"
+        where: "PLACEHOLDER: University"
+        text: ""
+  - title: Skills
+    entries:
+      - when: "Languages"
+        what: "PLACEHOLDER: check this list: C++, Rust, Python, CUDA"
+        where: ""
+        text: ""
