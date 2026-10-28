@@ -1,5 +1,23 @@
-{{- with hugo.Data.cv }}
-{{- with .pdf }}
+{{- /* Renders data/cv.yaml. A missing field fails the build, so a typo cannot publish an empty row. */}}
+{{- $file := "data/cv.yaml" }}
+{{- $cv := hugo.Data.cv }}
+{{- $sections := and (reflect.IsMap $cv) $cv.sections }}
+{{- if not (and (reflect.IsSlice $sections) $sections) }}
+  {{- errorf `%s: "sections" must be a non-empty list.` $file }}
+{{- end }}
+{{- range $i, $section := $sections }}
+  {{- if not (and (reflect.IsMap $section) $section.title (reflect.IsSlice $section.entries) $section.entries) }}
+    {{- errorf `%s: section %d needs a "title" and a non-empty "entries" list.` $file (add $i 1) }}
+  {{- end }}
+  {{- range $j, $entry := $section.entries }}
+    {{- if not (and (reflect.IsMap $entry) $entry.when $entry.what) }}
+      {{- errorf `%s: section %q, entry %d needs "when" and "what".` $file $section.title (add $j 1) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- /* One grid for the whole CV: sections and lists are subgrids, so all sections share the term column. */}}
+<div class="cv">
+{{- with $cv.pdf }}
 <p class="cv-pdf"><a href="{{ . | relURL }}">Download the CV as PDF</a></p>
 {{- end }}
 {{- /* Print only: print hides the footer, so a printed CV needs its web addresses as text. */}}
@@ -9,15 +27,15 @@
   <li><a href="https://github.com/{{ . }}">github.com/{{ . }}</a></li>
   {{- end }}
 </ul>
-{{- range .sections }}
+{{- range $sections }}
 <section class="cv-section">
   <h2>{{ .title }}</h2>
   <dl class="cv-list">
     {{- range .entries }}
     <dt>{{ .when }}</dt>
-    <dd><span class="cv-what">{{ .what }}</span>{{ with .where }}, {{ . }}{{ end }}{{ with .text }} <span class="cv-text">{{ $.Page.RenderString . }}</span>{{ end }}</dd>
+    <dd><span class="cv-what">{{ .what }}</span>{{ with .where }}, {{ . }}{{ end }}{{ with .text }} <div class="cv-text">{{ $.Page.RenderString (dict "display" "block") . }}</div>{{ end }}</dd>
     {{- end }}
   </dl>
 </section>
 {{- end }}
-{{- end }}
+</div>

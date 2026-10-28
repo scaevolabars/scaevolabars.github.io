@@ -1,4 +1,20 @@
-{{- range hugo.Data.projects }}
+{{- /* Renders data/projects.yaml. A missing field or a bad link fails the build. */}}
+{{- $file := "data/projects.yaml" }}
+{{- $projects := hugo.Data.projects }}
+{{- if not (and (reflect.IsSlice $projects) $projects) }}
+  {{- errorf `%s: the file must be a non-empty list of projects.` $file }}
+{{- end }}
+{{- range $i, $project := $projects }}
+  {{- if not (and (reflect.IsMap $project) $project.name $project.text) }}
+    {{- errorf `%s: project %d needs "name" and "text".` $file (add $i 1) }}
+  {{- end }}
+  {{- range $j, $link := $project.links }}
+    {{- if not (and (reflect.IsMap $link) $link.label (or (hasPrefix $link.url "https://") (hasPrefix $link.url "/"))) }}
+      {{- errorf `%s: project %q, link %d needs a "label" and a "url" that starts with https:// or /.` $file $project.name (add $j 1) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- range $projects }}
 <section class="project">
   <h2 class="project__name">{{ .name }} <span class="project__year">{{ .year }}</span></h2>
   {{ $.Page.RenderString (dict "display" "block") .text }}
