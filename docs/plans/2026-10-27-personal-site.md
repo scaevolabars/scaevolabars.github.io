@@ -1795,6 +1795,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: jetify-com/devbox-install-action@v0.15.0
         with:
+          devbox-version: 0.18.5
           enable-cache: true
       - name: Test
         run: devbox run test
@@ -1857,12 +1858,12 @@ Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hug
 
 ```bash
 devbox run test           # build the site and run the tests
-devbox run check-content  # fails while PLACEHOLDER text remains
+devbox run check-content  # fails while "PLACEHOLDER:" text remains in the built site (it does not read PDFs)
 ```
 
 ## Deploy
 
-Push to `master`. GitHub Actions tests, builds and deploys the site. The deploy stops while PLACEHOLDER text remains.
+Push to `master`. GitHub Actions tests, builds and deploys the site. The deploy stops while "PLACEHOLDER:" text remains. The check does not read PDF files, so check a PDF CV by hand.
 
 ## Third-party files
 
