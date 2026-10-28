@@ -1,12 +1,23 @@
 import re
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import pytest
 from bs4 import BeautifulSoup
 
 from helpers import ROOT, copy_site, hugo_build, page
 
 SAMPLE = "/posts/sample-features/"
+
+
+def build_post(tmp_path: Path, body: str, description: str = "Test post.") -> tuple[subprocess.CompletedProcess[str], Path]:
+    """Build a copy of the site with one extra post. Returns the Hugo result and the output dir."""
+    site = copy_site(tmp_path / "src")
+    front = f"---\ntitle: Test\ndate: 2026-01-02\ndescription: {description!r}\n---\n\n" if description else "---\ntitle: Test\ndate: 2026-01-02\n---\n\n"
+    (site / "content" / "posts" / "test-post.md").write_text(front + body + "\n", encoding="utf-8")
+    out = tmp_path / "out"
+    return hugo_build(site, out), out
 
 
 def test_sidenote_is_inline_and_toggleable(draft_site: Path) -> None:
@@ -25,7 +36,7 @@ def test_sidenotes_inside_another_shortcode_get_unique_ids(tmp_path: Path) -> No
     site = copy_site(tmp_path / "src")
     (site / "layouts" / "_shortcodes" / "aside.html").write_text('<div class="aside">{{ .Inner }}</div>')
     (site / "content" / "posts" / "nested.md").write_text(
-        "---\ntitle: Nested\ndate: 2026-01-02\n---\n\n"
+        "---\ntitle: Nested\ndate: 2026-01-02\ndescription: Nested notes.\n---\n\n"
         "{{< aside >}}One.{{< note >}}a{{< /note >}} Two.{{< note >}}b{{< /note >}}{{< /aside >}}\n\n"
         "{{< aside >}}Three.{{< note >}}c{{< /note >}}{{< /aside >}}\n",
         encoding="utf-8",
@@ -95,3 +106,70 @@ def test_scrolling_blocks_are_reachable_with_tab(draft_site: Path) -> None:
     blocks = page(draft_site, SAMPLE).select(".prose pre")
     assert {"chroma", "mermaid"} <= {name for pre in blocks for name in pre.get("class", [])}
     assert [pre.get("tabindex") for pre in blocks] == ["0"] * len(blocks)
+
+
+@pytest.mark.parametrize("body", ["The bid was $5 and the ask was $10.", "Sizes 2$ and 3$ only."])
+def test_prices_are_not_taken_for_math(tmp_path: Path, body: str) -> None:
+    result, _ = build_post(tmp_path, body)
+    assert result.returncode != 0
+    assert "inline math starts or ends with a space" in result.stderr
+    assert "For a dollar sign, write \\$." in result.stderr
+
+
+def test_escaped_brackets_stay_text(tmp_path: Path) -> None:
+    result, out = build_post(tmp_path, r"Read a\[i\] and f\(x\) here.")
+    assert result.returncode == 0, result.stderr
+    prose = page(out, "/posts/test-post/").select_one(".prose")
+    assert "a[i] and f(x)" in prose.get_text()
+    assert prose.select_one(".katex") is None
+
+
+def test_bad_formula_fails_the_build_and_names_the_file(tmp_path: Path) -> None:
+    result, _ = build_post(tmp_path, r"Broken $\notacommand{x}$ here.")
+    assert result.returncode != 0
+    assert "Unable to render math" in result.stderr and "test-post.md" in result.stderr
+
+
+def test_page_with_math_only_in_a_note_loads_katex_css(tmp_path: Path) -> None:
+    result, out = build_post(tmp_path, "Plain text.{{< note >}}Here $x^2$ is math.{{< /note >}} More text.")
+    assert result.returncode == 0, result.stderr
+    assert page(out, "/posts/test-post/").select_one('link[href="/vendor/katex/katex.min.css"]') is not None
+
+
+def test_display_math_is_reachable_with_tab(draft_site: Path) -> None:
+    blocks = page(draft_site, SAMPLE).select(".katex-display")
+    assert blocks and [b.get("tabindex") for b in blocks] == ["0"] * len(blocks)
+
+
+def test_note_with_block_content_fails_the_build(tmp_path: Path) -> None:
+    result, _ = build_post(tmp_path, "Text.{{< note >}}One.\n\nTwo.{{< /note >}} More.")
+    assert result.returncode != 0
+    assert "a note must be one paragraph of inline text" in result.stderr
+
+
+def feed_items(site: Path) -> dict[str, str]:
+    """Every feed item's description, by feed file and item link."""
+    items = {}
+    for feed in site.rglob("index.xml"):
+        for item in ET.parse(feed).getroot().iter("item"):
+            items[f"{feed.relative_to(site)} {item.findtext('link')}"] = item.findtext("description") or ""
+    return items
+
+
+def test_feeds_show_notes_inline_and_math_as_mathml(draft_site: Path) -> None:
+    items = feed_items(draft_site)
+    assert items
+    for key, html in items.items():
+        for bad in ("<input", "note-ref", "katex-html"):
+            assert bad not in html, (key, bad)
+    sample = [html for key, html in items.items() if key.startswith("index.xml ") and key.endswith(SAMPLE)]
+    assert len(sample) == 1
+    assert "later. (Use the mid at" in sample[0] and "<math" in sample[0]
+
+
+@pytest.mark.parametrize("body", ["Price $p_t$ moves.", "Text.{{< note >}}An aside.{{< /note >}} More."])
+def test_entry_needs_a_description_when_its_summary_has_math_or_a_note(tmp_path: Path, body: str) -> None:
+    result, _ = build_post(tmp_path, body, description="")
+    assert result.returncode != 0
+    assert "add a description: the first paragraph has math or a note" in result.stderr
+    assert "test-post.md" in result.stderr

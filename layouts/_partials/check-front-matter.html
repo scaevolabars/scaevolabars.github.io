@@ -17,4 +17,8 @@
   {{- if .Date.IsZero -}}
     {{- errorf "%s: the date is missing." .File.Path -}}
   {{- end -}}
+  {{- /* The description falls back to the plain-text summary, which would garble math and notes. */ -}}
+  {{- if and (not .Description) (or (strings.Contains .Summary `class="katex`) (strings.Contains .Summary `class="note`)) -}}
+    {{- errorf "%s: add a description: the first paragraph has math or a note." .File.Path -}}
+  {{- end -}}
 {{- end -}}

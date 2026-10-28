@@ -2,6 +2,7 @@
 title: "Sample note: Attention Is All You Need"
 date: 2026-10-20
 draft: true
+description: "A draft that shows the layout of a paper note."
 paper: "Attention Is All You Need"
 authors: "Vaswani et al."
 year: 2017
