@@ -10,7 +10,7 @@
   <dl class="cv-list">
     {{- range .entries }}
     <dt>{{ .when }}</dt>
-    <dd><span class="cv-what">{{ .what }}</span>{{ with .where }}, {{ . }}{{ end }}{{ with .text }}<span class="cv-text">{{ $.Page.RenderString . }}</span>{{ end }}</dd>
+    <dd><span class="cv-what">{{ .what }}</span>{{ with .where }}, {{ . }}{{ end }}{{ with .text }} <span class="cv-text">{{ $.Page.RenderString . }}</span>{{ end }}</dd>
     {{- end }}
   </dl>
 </section>
