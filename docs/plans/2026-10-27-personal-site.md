@@ -10,8 +10,10 @@
 
 **Design:** `docs/plans/2026-10-27-personal-site-design.md`
 
+**Status:** implemented on `hugo-site`. For Tasks 1-11 the code in the repository is the reference: review rounds changed it after the blocks below were written.
+
 **Conventions:**
-- Run every command from the repo root: `/Users/ssbars/Documents/repos_scaevolabars/scaevolabars.github.io`.
+- Run every command from the repo root.
 - Branch: `hugo-site`. Commit messages: short imperative, no Claude co-author lines.
 - `hugo` only exists inside devbox. Run tests with `devbox run test`, not bare `pytest`.
 - Hugo template gotcha: `{{% %}}` shortcodes pass output through Markdown and drop raw HTML (goldmark `unsafe = false`). Always use `{{< >}}`.
@@ -1914,9 +1916,9 @@ Do not do these without the owner's answer:
 
 1. **Content:** the owner replaces every `PLACEHOLDER` (home intro, about, CV, projects) or gives the facts to fill in. Only the owner supplies contact data: never fill in an email address or other personal data from git config or any other source.
 2. **Join the histories:** the remote `master` (0105682, "Merge pull request #1 from scaevolabars/gh-pages") holds the old built al-folio site with `.nojekyll`, and `hugo-site` does not contain it, so a plain merge conflicts in 13 paths and keeps about 40 old built files. With the owner's approval, on `hugo-site`: `git fetch origin && git merge -s ours origin/master -m "Replace the old built site with the Hugo site"`, then `devbox run test`.
-3. **Pages source:** before the merge to `master`, switch GitHub Pages from the legacy branch build to GitHub Actions. Otherwise the legacy build publishes the raw repo tree (the old master has `.nojekyll`, so it does not run Jekyll) and races the Actions deploy:
+3. **Pages source:** before the merge to `master`, switch GitHub Pages from the legacy branch build to GitHub Actions. Otherwise the legacy build runs Jekyll over the Hugo sources (after the merge, `master` has no `.nojekyll`) and races the Actions deploy:
    `gh api -X PUT repos/scaevolabars/scaevolabars.github.io/pages -f build_type=workflow`
    The last legacy deploy stays live until the first Actions deploy succeeds. Afterwards, check that the `github-pages` environment still allows `master`.
 4. **First CI run:** the workflow has never run on GitHub. Push `hugo-site`, open a PR, and wait for a green run (test and build; the PR run skips the placeholder gate). Run `devbox run check-content` locally before the merge: on `master` the deploy stops while `PLACEHOLDER:` text remains.
-5. **Integrate:** merge the PR, merge locally, or keep the branch (superpowers:finishing-a-development-branch).
+5. **Integrate:** merge the PR with "Create a merge commit" ("Rebase and merge" drops the joining merge and conflicts; "Squash" works but collapses the history), merge locally, or keep the branch (superpowers:finishing-a-development-branch). For a local merge, update the stale local `master` first: `git switch master && git merge --ff-only origin/master`.
 6. After the first deploy, check `https://scaevolabars.github.io/` and one `.mjs` diagram page (GitHub Pages serves `.mjs` as `text/javascript`).

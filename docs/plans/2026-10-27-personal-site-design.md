@@ -32,7 +32,7 @@ content/
   posts/        Long posts. Front matter: title, date, topics, description, draft
   notes/        Paper notes. Adds: paper, authors, year, link
   projects.md   Renders data/projects.yaml (name, year, text, links)
-  cv.md         Renders data/cv.yaml; links static/cv.pdf if present
+  cv.md         Renders data/cv.yaml; links a PDF under static/ when `pdf` is set
   about.md      Free Markdown
 data/
   projects.yaml
@@ -48,7 +48,7 @@ URLs:
 
 Topics are a fixed list of eight slugs: `trading`, `low-latency`, `gpu`,
 `algorithms`, `math`, `physics`, `foundation-models`, `robotics`. The build
-warns (and so fails, with `--panicOnWarning`) on an unknown topic.
+fails on an unknown topic.
 
 All al-folio files, demo posts, and Ruby/Docker files are removed. Git history
 stays. Bio, CV and projects ship as clearly marked placeholders. One draft
