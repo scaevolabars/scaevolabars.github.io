@@ -25,7 +25,9 @@ def link_works(site: Path, html: Path, link: str, ids: dict[Path, set[str]]) -> 
     if target is None:
         return False
     fragment = unquote(parts.fragment)
-    return not fragment or target.suffix != ".html" or fragment in ids[target]
+    if not fragment or fragment.lower() == "top" or target.suffix != ".html":
+        return True  # "#top" means the top of the page in HTML
+    return fragment in ids.get(target, set())  # .get: a case-insensitive disk finds /DOCS/ but the key is /docs/
 
 
 def broken_links(site: Path) -> list[tuple[str, str]]:
@@ -53,8 +55,9 @@ def test_link_check_finds_each_kind_of_broken_link(tmp_path: Path) -> None:
     (site / "docs" / "my file.txt").write_text("text", encoding="utf-8")
     (site / "docs" / "index.html").write_text('<h2 id="setup">Setup</h2>', encoding="utf-8")
     (tmp_path / "outside.html").write_text("", encoding="utf-8")
-    good = ["/docs/my%20file.txt", "/docs/#setup", "docs", "docs/index.html#setup", "#main", "https://example.com/x"]
-    bad = ["", "#ZgotmplZ", "/docs/#install", "#nowhere", "/missing/", "/docs/my file.pdf", "../outside.html"]
+    good = ["/docs/my%20file.txt", "/docs/#setup", "docs", "docs/index.html#setup", "#main", "#top", "https://example.com/x"]
+    # /DOCS/ is a different path on the server; on a case-insensitive disk it must still not crash the check.
+    bad = ["", "#ZgotmplZ", "/docs/#install", "#nowhere", "/missing/", "/docs/my file.pdf", "../outside.html", "/DOCS/#setup"]
     links = "".join(f'<a href="{link}">x</a>' for link in good + bad)
     (site / "index.html").write_text(f'<main id="main">{links}<a href>x</a></main>', encoding="utf-8")
     assert broken_links(site) == sorted([("index.html", link) for link in bad] + [("index.html", "")])

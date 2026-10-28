@@ -1,19 +1,34 @@
 {{- /* Renders data/projects.yaml. A missing field or a bad link fails the build. */}}
 {{- $file := "data/projects.yaml" }}
 {{- $projects := hugo.Data.projects }}
-{{- if not (and (reflect.IsSlice $projects) $projects) }}
+{{- $ok := and (reflect.IsSlice $projects) $projects }}
+{{- if not $ok }}
   {{- errorf `%s: the file must be a non-empty list of projects.` $file }}
 {{- end }}
 {{- range $i, $project := $projects }}
+  {{- $name := printf "project %d" (add $i 1) }}
+  {{- if and (reflect.IsMap $project) $project.name }}{{ $name = printf `project "%v"` $project.name }}{{ end }}
   {{- if not (and (reflect.IsMap $project) $project.name $project.text) }}
-    {{- errorf `%s: project %d needs "name" and "text".` $file (add $i 1) }}
-  {{- end }}
-  {{- range $j, $link := $project.links }}
-    {{- if not (and (reflect.IsMap $link) $link.label (or (hasPrefix $link.url "https://") (hasPrefix $link.url "/"))) }}
-      {{- errorf `%s: project %q, link %d needs a "label" and a "url" that starts with https:// or /.` $file $project.name (add $j 1) }}
+    {{- errorf `%s: %s needs "name" and "text".` $file $name }}
+    {{- $ok = false }}
+  {{- else }}
+    {{- with $project.links }}
+      {{- if not (reflect.IsSlice .) }}
+        {{- errorf `%s: %s: "links" must be a list.` $file $name }}
+        {{- $ok = false }}
+      {{- else }}
+        {{- range $j, $link := . }}
+          {{- $url := and (reflect.IsMap $link) $link.url }}
+          {{- if not (and (reflect.IsMap $link) $link.label (or (hasPrefix $url "https://") (and (hasPrefix $url "/") (not (hasPrefix $url "//"))))) }}
+            {{- errorf `%s: %s, link %d needs a "label" and a "url" that starts with https:// or / (not //).` $file $name (add $j 1) }}
+            {{- $ok = false }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
+{{- if $ok }}
 {{- range $projects }}
 <section class="project">
   <h2 class="project__name">{{ .name }} <span class="project__year">{{ .year }}</span></h2>
@@ -26,4 +41,5 @@
   </ul>
   {{- end }}
 </section>
+{{- end }}
 {{- end }}

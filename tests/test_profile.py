@@ -58,6 +58,22 @@ BAD_DATA = {
         "- name: Alpha\n  text: Text.\n  links:\n    - label: Code\n      url: http://example.com\n",
         'data/projects.yaml: project "Alpha", link 1 needs a "label" and a "url" that starts with https:// or /',
     ),
+    "project link protocol-relative": (
+        "projects.yaml",
+        "- name: Alpha\n  text: Text.\n  links:\n    - label: Code\n      url: //example.com\n",
+        'data/projects.yaml: project "Alpha", link 1 needs a "label" and a "url" that starts with https:// or /',
+    ),
+    "project links not a list": (
+        "projects.yaml",
+        "- name: Alpha\n  text: Text.\n  links: https://example.com\n",
+        'data/projects.yaml: project "Alpha": "links" must be a list',
+    ),
+    "project name is a number": ("projects.yaml", "- name: 2048\n", 'data/projects.yaml: project "2048" needs "name" and "text"'),
+    "cv section without title": (
+        "cv.yaml",
+        "sections:\n  - entries:\n      - when: 2020\n        what: Engineer\n",
+        'data/cv.yaml: section 1 needs a "title" and a non-empty "entries" list',
+    ),
 }
 
 
@@ -136,7 +152,9 @@ def test_bad_profile_data_fails_the_build(tmp_path: Path, file: str, data: str, 
     (src / "data" / file).write_text(data, encoding="utf-8")
     result = hugo_build(src, tmp_path / "out")
     assert result.returncode != 0
-    assert message in result.stderr + result.stdout
+    output = result.stderr + result.stdout
+    assert message in output
+    assert "%!" not in output  # no broken printf verbs
 
 
 def test_printed_cv_shows_site_and_github_addresses(prod_site: Path) -> None:

@@ -2,19 +2,27 @@
 {{- $file := "data/cv.yaml" }}
 {{- $cv := hugo.Data.cv }}
 {{- $sections := and (reflect.IsMap $cv) $cv.sections }}
-{{- if not (and (reflect.IsSlice $sections) $sections) }}
+{{- $ok := and (reflect.IsSlice $sections) $sections }}
+{{- if not $ok }}
   {{- errorf `%s: "sections" must be a non-empty list.` $file }}
 {{- end }}
 {{- range $i, $section := $sections }}
-  {{- if not (and (reflect.IsMap $section) $section.title (reflect.IsSlice $section.entries) $section.entries) }}
-    {{- errorf `%s: section %d needs a "title" and a non-empty "entries" list.` $file (add $i 1) }}
-  {{- end }}
-  {{- range $j, $entry := $section.entries }}
-    {{- if not (and (reflect.IsMap $entry) $entry.when $entry.what) }}
-      {{- errorf `%s: section %q, entry %d needs "when" and "what".` $file $section.title (add $j 1) }}
+  {{- $name := printf "section %d" (add $i 1) }}
+  {{- if and (reflect.IsMap $section) $section.title }}{{ $name = printf `section "%v"` $section.title }}{{ end }}
+  {{- $entries := and (reflect.IsMap $section) $section.entries }}
+  {{- if not (and (reflect.IsMap $section) $section.title (reflect.IsSlice $entries) $entries) }}
+    {{- errorf `%s: %s needs a "title" and a non-empty "entries" list.` $file $name }}
+    {{- $ok = false }}
+  {{- else }}
+    {{- range $j, $entry := $entries }}
+      {{- if not (and (reflect.IsMap $entry) $entry.when $entry.what) }}
+        {{- errorf `%s: %s, entry %d needs "when" and "what".` $file $name (add $j 1) }}
+        {{- $ok = false }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
+{{- if $ok }}
 {{- /* One grid for the whole CV: sections and lists are subgrids, so all sections share the term column. */}}
 <div class="cv">
 {{- with $cv.pdf }}
@@ -39,3 +47,4 @@
 </section>
 {{- end }}
 </div>
+{{- end }}
