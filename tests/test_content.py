@@ -2,19 +2,19 @@ from pathlib import Path
 
 import pytest
 
-from helpers import copy_site, hugo_build
+from helpers import build_post
 
 
 def placeholder_hits(site: Path) -> list[str]:
-    """Built files, relative to `site`, that still contain template text: every placeholder starts "PLACEHOLDER:".
+    """Built files (pages, feeds, sitemap), relative to `site`, that still contain template text.
 
-    Every file counts (pages, feeds, sitemap) except vendor/.
+    Every placeholder starts "PLACEHOLDER:".
     """
     return sorted(
         str(rel)
         for path in site.rglob("*")
         if path.is_file()
-        # vendor/ holds the KaTeX and Mermaid files from npm: not our text, and not ours to edit.
+        # vendor/ holds the KaTeX and Mermaid files from npm, not our text.
         and (rel := path.relative_to(site)).parts[0] != "vendor"
         and b"PLACEHOLDER:" in path.read_bytes()
     )
@@ -31,15 +31,12 @@ def test_no_placeholder_text_is_published(prod_site: Path) -> None:
 
 def test_placeholder_scan_finds_feed_only_text(tmp_path: Path) -> None:
     # A summary goes only into the feeds when the post has its own description.
-    src = copy_site(tmp_path / "src")
-    (src / "content" / "posts" / "feed-only.md").write_text(
-        "---\ntitle: Feed only\ndate: 2026-01-02\ntopics: [math]\n"
-        'description: "A real description."\nsummary: "PLACEHOLDER: one sentence for the feed."\n---\n'
-        "The PLACEHOLDER pattern in C++ is not template text.\n",
-        encoding="utf-8",
+    front_matter = (
+        "title: Test\ndate: 2026-01-02\ntopics: [math]\n"
+        'description: "A real description."\nsummary: "PLACEHOLDER: one sentence for the feed."\n'
     )
-    result = hugo_build(src, tmp_path / "out")
+    result, out = build_post(tmp_path, "The PLACEHOLDER pattern in C++ is not template text.", front_matter)
     assert result.returncode == 0, result.stderr + result.stdout
-    hits = placeholder_hits(tmp_path / "out")
+    hits = placeholder_hits(out)
     assert {"index.xml", "posts/index.xml", "topics/math/index.xml"} <= set(hits), hits
-    assert "posts/feed-only/index.html" not in hits
+    assert "posts/test-post/index.html" not in hits

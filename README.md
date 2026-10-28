@@ -14,8 +14,9 @@ devbox run -- hugo new content notes/paper-name.md  # new paper note, starts as 
 devbox run dev                                      # preview with drafts at http://localhost:1313
 ```
 
-Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hugo.toml`; any other topic fails the build. Raw HTML in Markdown also fails the build: put code such as `vector<T>` in backticks.
+Set `draft: false` to publish. Drafts are not published, but the tests and CI build them: a draft that breaks the build or the tests stops the deploy. Topics must be slugs from `params.topics` in `hugo.toml`; any other topic fails the build. Raw HTML in Markdown also fails the build: put code such as `vector<T>` in backticks.
 
+- Headings: start sections at `##`. The title is the page's only h1; the tests fail on a second one.
 - Sidenote: `text{{< note >}}Note text.{{< /note >}} more text`
 - Math: `$inline$` and `$$display$$`. Write `\$` for a literal dollar sign in text; inline math that starts or ends with a space fails the build, which catches prices such as `$5 and $10`. Inside a formula, write `\text{\textdollar}` for a dollar sign.
 - Diagram: a fenced code block with the language `mermaid`.

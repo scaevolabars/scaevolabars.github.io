@@ -5,9 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from helpers import ROOT, copy_site, hugo_build, page
-
-CONFIG = tomllib.loads((ROOT / "hugo.toml").read_text(encoding="utf-8"))
+from helpers import CONFIG, ROOT, copy_site, hugo_build, page
 
 # Fixture data, so the structure tests do not depend on the owner's CV and projects.
 CV_YAML = """\

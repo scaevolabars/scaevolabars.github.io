@@ -4,20 +4,10 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
-from bs4 import BeautifulSoup
 
-from helpers import ROOT, copy_site, hugo_build, page
+from helpers import ROOT, build_post, copy_site, page, parse
 
 SAMPLE = "/posts/sample-features/"
-
-
-def build_post(tmp_path: Path, body: str, description: str = "Test post.") -> tuple[subprocess.CompletedProcess[str], Path]:
-    """Build a copy of the site with one extra post. Returns the Hugo result and the output dir."""
-    site = copy_site(tmp_path / "src")
-    front = f"---\ntitle: Test\ndate: 2026-01-02\ndescription: {description!r}\n---\n\n" if description else "---\ntitle: Test\ndate: 2026-01-02\n---\n\n"
-    (site / "content" / "posts" / "test-post.md").write_text(front + body + "\n", encoding="utf-8")
-    out = tmp_path / "out"
-    return hugo_build(site, out), out
 
 
 def test_sidenote_is_inline_and_toggleable(draft_site: Path) -> None:
@@ -35,15 +25,13 @@ def test_sidenotes_inside_another_shortcode_get_unique_ids(tmp_path: Path) -> No
     # Hugo 0.166 reports line 1, column 1 for every nested shortcode, so the position alone repeats.
     site = copy_site(tmp_path / "src")
     (site / "layouts" / "_shortcodes" / "aside.html").write_text('<div class="aside">{{ .Inner }}</div>')
-    (site / "content" / "posts" / "nested.md").write_text(
-        "---\ntitle: Nested\ndate: 2026-01-02\ndescription: Nested notes.\n---\n\n"
+    body = (
         "{{< aside >}}One.{{< note >}}a{{< /note >}} Two.{{< note >}}b{{< /note >}}{{< /aside >}}\n\n"
-        "{{< aside >}}Three.{{< note >}}c{{< /note >}}{{< /aside >}}\n",
-        encoding="utf-8",
+        "{{< aside >}}Three.{{< note >}}c{{< /note >}}{{< /aside >}}"
     )
-    result = hugo_build(site, tmp_path / "out")
+    result, out = build_post(tmp_path, body, site=site)
     assert result.returncode == 0, result.stderr + result.stdout
-    ids = [toggle["id"] for toggle in page(tmp_path / "out", "/posts/nested/").select("input.note-toggle")]
+    ids = [toggle["id"] for toggle in page(out, "/posts/test-post/").select("input.note-toggle")]
     assert len(ids) == 3 and len(set(ids)) == 3, ids
 
 
@@ -85,7 +73,7 @@ def test_diagram_module_imports_vendored_mermaid(draft_site: Path) -> None:
 def test_only_pages_with_diagrams_load_javascript(prod_site: Path, draft_site: Path) -> None:
     for site in (prod_site, draft_site):
         for html in site.rglob("*.html"):
-            soup = BeautifulSoup(html.read_text(encoding="utf-8"), "html.parser")
+            soup = parse(html)
             assert bool(soup.select("script")) == bool(soup.select("pre.mermaid")), html
 
 
@@ -177,7 +165,7 @@ def test_feeds_show_notes_inline_and_math_as_mathml(draft_site: Path) -> None:
 
 @pytest.mark.parametrize("body", ["Price $p_t$ moves.", "Text.{{< note >}}An aside.{{< /note >}} More."])
 def test_entry_needs_a_description_when_its_summary_has_math_or_a_note(tmp_path: Path, body: str) -> None:
-    result, _ = build_post(tmp_path, body, description="")
+    result, _ = build_post(tmp_path, body, "title: Test\ndate: 2026-01-02\n")
     assert result.returncode != 0
     assert "add a description: the first paragraph has math or a note" in result.stderr
     assert "test-post.md" in result.stderr

@@ -2,7 +2,8 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 import pytest
-from bs4 import BeautifulSoup
+
+from helpers import parse
 
 LINK_ATTRS = {"a": "href", "link": "href", "script": "src", "img": "src", "source": "src"}
 
@@ -33,7 +34,7 @@ def link_works(site: Path, html: Path, link: str, ids: dict[Path, set[str]]) -> 
 def broken_links(site: Path) -> list[tuple[str, str]]:
     """(page, link) for each empty link, missing file and missing #id in the built site."""
     site = site.resolve()
-    soups = {html: BeautifulSoup(html.read_text(encoding="utf-8"), "html.parser") for html in site.rglob("*.html")}
+    soups = {html: parse(html) for html in site.rglob("*.html")}
     ids = {html: {e["id"] for e in soup.find_all(id=True)} for html, soup in soups.items()}
     return sorted(
         (str(html.relative_to(site)), element[attr])
