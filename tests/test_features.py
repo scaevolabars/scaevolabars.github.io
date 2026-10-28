@@ -89,3 +89,9 @@ def test_code_is_highlighted_with_classes(draft_site: Path) -> None:
 def test_syntax_colours_keep_muted_text_off_the_grid() -> None:
     css = (ROOT / "assets" / "css" / "syntax.css").read_text(encoding="utf-8")
     assert "var(--grid)" not in css, "muted comments on --grid are 4.29:1 in light mode"
+
+
+def test_scrolling_blocks_are_reachable_with_tab(draft_site: Path) -> None:
+    blocks = page(draft_site, SAMPLE).select(".prose pre")
+    assert {"chroma", "mermaid"} <= {name for pre in blocks for name in pre.get("class", [])}
+    assert [pre.get("tabindex") for pre in blocks] == ["0"] * len(blocks)
