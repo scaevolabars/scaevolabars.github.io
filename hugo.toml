@@ -36,8 +36,6 @@ enableRobotsTXT = true
       inline = [['$', '$']]
   [markup.highlight]
     noClasses = false
-    codeFences = true
-    guessSyntax = false
 
 [[menus.main]]
   name = "Writing"
