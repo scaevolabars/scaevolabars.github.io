@@ -31,6 +31,8 @@ devbox run check-content  # fails while "PLACEHOLDER:" text remains in the built
 
 ## Deploy
 
+One-time setting: set Settings → Pages → Build and deployment → Source to GitHub Actions before the first merge to `master`.
+
 Push to `master`. GitHub Actions tests, builds and deploys the site. The deploy stops while "PLACEHOLDER:" text remains. The check does not decode PDF files, so check a PDF CV by hand.
 
 ## Third-party files

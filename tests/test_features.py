@@ -147,6 +147,14 @@ def test_note_with_block_content_fails_the_build(tmp_path: Path) -> None:
     assert "a note must be one paragraph of inline text" in result.stderr
 
 
+@pytest.mark.parametrize("body", ["<div>Raw.</div>\n\nText.", "A vector<T> here."])
+def test_raw_html_fails_the_build(tmp_path: Path, body: str) -> None:
+    # The README promises this rule. An ignoreLogs entry for this warning would silently drop the HTML instead.
+    result, _ = build_post(tmp_path, body)
+    assert result.returncode != 0
+    assert "Raw HTML omitted" in result.stderr and "warning-goldmark-raw-html" in result.stderr
+
+
 def feed_items(site: Path) -> dict[str, str]:
     """Every feed item's description, by feed file and item link."""
     items = {}
