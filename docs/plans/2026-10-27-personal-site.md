@@ -1850,7 +1850,7 @@ devbox run dev                                      # preview with drafts at htt
 Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hugo.toml`; any other topic fails the build. Raw HTML in Markdown also fails the build: put code such as `vector<T>` in backticks.
 
 - Sidenote: `text{{< note >}}Note text.{{< /note >}} more text`
-- Math: `$inline$` and `$$display$$`. Write `\$` for a literal dollar sign in text; inline math that starts or ends with a space fails the build, which catches prices such as `$5 and $10`. Inside a formula, write `\textdollar` for a dollar sign.
+- Math: `$inline$` and `$$display$$`. Write `\$` for a literal dollar sign in text; inline math that starts or ends with a space fails the build, which catches prices such as `$5 and $10`. Inside a formula, write `\text{\textdollar}` for a dollar sign.
 - Diagram: a fenced code block with the language `mermaid`.
 - CV: `data/cv.yaml`. Projects: `data/projects.yaml`. For a PDF CV, put it in `static/` and set `pdf` in `data/cv.yaml`.
 - Keep the drafts `content/posts/sample-features.md`, `content/posts/sample-older.md` and `content/notes/sample-note.md`. They are never published; the tests use them, and they show every feature in use.
@@ -1859,12 +1859,12 @@ Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hug
 
 ```bash
 devbox run test           # build the site and run the tests
-devbox run check-content  # fails while "PLACEHOLDER:" text remains in the built site (it does not read PDFs)
+devbox run check-content  # fails while "PLACEHOLDER:" text remains in the built site (it does not decode PDFs)
 ```
 
 ## Deploy
 
-Push to `master`. GitHub Actions tests, builds and deploys the site. The deploy stops while "PLACEHOLDER:" text remains. The check does not read PDF files, so check a PDF CV by hand.
+Push to `master`. GitHub Actions tests, builds and deploys the site. The deploy stops while "PLACEHOLDER:" text remains. The check does not decode PDF files, so check a PDF CV by hand.
 
 ## Third-party files
 
