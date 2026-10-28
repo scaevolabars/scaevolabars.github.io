@@ -121,6 +121,8 @@ pre code { font-size: 1em; }
 .band--home .band__bar { justify-content: flex-end; }
 .band__name { color: var(--ink); font-weight: 650; text-decoration: none; }
 .band__nav ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 0; padding: 0; list-style: none; }
+/* On a 360 px phone the five nav links fit on one line only with a smaller gap. */
+@media (max-width: 26em) { .band__nav ul { column-gap: 0.8rem; } }
 .band__nav a { color: var(--ink); text-decoration: none; }
 .band__nav a:hover,
 .band__nav a[aria-current] { text-decoration: underline 2px var(--pencil); text-underline-offset: 0.3em; }
@@ -130,7 +132,11 @@ pre code { font-size: 1em; }
 .band__lede p { margin: 0 0 0.75em; }
 .band__lede p:last-child { margin-bottom: 0; }
 
-/* Page */
+/* Page. On screen the footer sits at the bottom of the window on short pages. */
+@media screen {
+  body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100svh; }
+  main { flex: 1 0 auto; }
+}
 main { padding-block: 2.5rem 4rem; }
 .page-title { max-width: var(--measure); margin: 0 0 1.5rem; font-size: clamp(1.9rem, 4.5vw, 2.5rem); line-height: 1.15; }
 .entry-head { margin-bottom: 2rem; }
