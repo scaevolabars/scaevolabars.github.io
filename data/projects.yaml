@@ -1,0 +1,7 @@
+# Projects for /projects/, newest first. Replace every PLACEHOLDER value.
+- name: "PLACEHOLDER: Project name"
+  year: 2026
+  text: "PLACEHOLDER: one paragraph on what the project does, why it exists, and one number that shows the result."
+  links:
+    - label: Code
+      url: "https://github.com/scaevolabars"

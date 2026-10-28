@@ -1,0 +1,1 @@
+{{- /* Feeds: the note goes inline in brackets, with no checkbox or label. */}} ({{ .Inner | .Page.RenderString }})

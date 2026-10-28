@@ -1,0 +1,16 @@
+[project]
+name = "scaevolabars-site"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "beautifulsoup4>=4.15.0",
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers"]
+markers = ["content: fails while PLACEHOLDER text remains in the built site"]

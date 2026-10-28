@@ -1,0 +1,45 @@
+{{- /* Renders data/projects.yaml. A missing field or a bad link fails the build. */}}
+{{- $file := "data/projects.yaml" }}
+{{- $projects := hugo.Data.projects }}
+{{- $ok := and (reflect.IsSlice $projects) $projects }}
+{{- if not $ok }}
+  {{- errorf `%s: the file must be a non-empty list of projects.` $file }}
+{{- end }}
+{{- range $i, $project := $projects }}
+  {{- $name := printf "project %d" (add $i 1) }}
+  {{- if and (reflect.IsMap $project) $project.name }}{{ $name = printf `project "%v"` $project.name }}{{ end }}
+  {{- if not (and (reflect.IsMap $project) $project.name $project.text) }}
+    {{- errorf `%s: %s needs "name" and "text".` $file $name }}
+    {{- $ok = false }}
+  {{- else }}
+    {{- with $project.links }}
+      {{- if not (reflect.IsSlice .) }}
+        {{- errorf `%s: %s: "links" must be a list.` $file $name }}
+        {{- $ok = false }}
+      {{- else }}
+        {{- range $j, $link := . }}
+          {{- $url := and (reflect.IsMap $link) $link.url }}
+          {{- if not (and (reflect.IsMap $link) $link.label (or (hasPrefix $url "https://") (and (hasPrefix $url "/") (not (hasPrefix $url "//"))))) }}
+            {{- errorf `%s: %s, link %d needs a "label" and a "url" that starts with https:// or / (not //).` $file $name (add $j 1) }}
+            {{- $ok = false }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- if $ok }}
+{{- range $projects }}
+<section class="project">
+  <h2 class="project__name">{{ .name }} <span class="project__year">{{ .year }}</span></h2>
+  {{ $.Page.RenderString (dict "display" "block") .text }}
+  {{- with .links }}
+  <ul class="project__links">
+    {{- range . }}
+    <li><a href="{{ .url }}">{{ .label }}</a></li>
+    {{- end }}
+  </ul>
+  {{- end }}
+</section>
+{{- end }}
+{{- end }}

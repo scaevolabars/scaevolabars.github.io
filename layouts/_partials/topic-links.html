@@ -1,0 +1,5 @@
+{{- /* Context: term pages, from .GetTerms "topics". */ -}}
+{{- range $i, $t := . -}}
+{{- if $i }}, {{ end -}}
+<a href="{{ .RelPermalink }}">{{ partial "title.html" . }}</a>
+{{- end -}}

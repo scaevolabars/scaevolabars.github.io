@@ -1,0 +1,12 @@
+{{- /* The note sits inside a line of text, so every line ends in a trim marker: no line break reaches the output. */ -}}
+{{- $id := printf "note-%d-%d-%d" .Position.LineNumber .Position.ColumnNumber .Ordinal -}}
+{{- with .Parent -}}
+  {{- $id = printf "%s-%d-%d" $id .Position.LineNumber .Position.ColumnNumber -}}
+{{- end -}}
+{{- $text := .Inner | .Page.RenderString -}}
+{{- if findRE `<(p|ul|ol|pre|div|table|blockquote)[\s>]` $text 1 -}}
+  {{- errorf "%s: a note must be one paragraph of inline text" .Position -}}
+{{- end -}}
+<input type="checkbox" class="note-toggle" id="{{ $id }}">{{- /**/ -}}
+<label class="note-ref" for="{{ $id }}"><span class="vh">Note </span></label>{{- /**/ -}}
+<span class="note" role="note">{{ $text }}</span>{{- /**/ -}}

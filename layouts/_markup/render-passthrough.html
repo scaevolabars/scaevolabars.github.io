@@ -1,0 +1,15 @@
+{{- partial "check-inline-math.html" . }}
+{{- $opts := dict "output" "htmlAndMathml" "displayMode" (eq .Type "block") }}
+{{- with try (transform.ToMath .Inner $opts) }}
+  {{- with .Err }}
+    {{- errorf "Unable to render math at %s: %s" $.Position . }}
+  {{- else }}
+    {{- $html := .Value }}
+    {{- if eq $.Type "block" }}
+      {{- /* A wide formula scrolls; tabindex lets the keyboard reach it, like code and tables. */}}
+      {{- $html = replace $html `<span class="katex-display">` `<span class="katex-display" tabindex="0">` 1 | safeHTML }}
+    {{- end }}
+    {{- $html }}
+    {{- $.Page.Store.Set "hasMath" true }}
+  {{- end }}
+{{- end -}}

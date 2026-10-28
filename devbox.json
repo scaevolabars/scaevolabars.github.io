@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.18.5/.schema/devbox.schema.json",
+  "packages": ["hugo@0.166.0", "uv@0.12.22"],
+  "shell": {
+    "scripts": {
+      "vendor": "scripts/vendor.sh",
+      "dev": ["scripts/vendor.sh", "hugo server --buildDrafts --disableFastRender"],
+      "build": ["scripts/vendor.sh", "hugo --gc --minify --panicOnWarning"],
+      "test": "uv run --locked pytest -m 'not content'",
+      "check-content": "uv run --locked pytest -m content"
+    }
+  }
+}

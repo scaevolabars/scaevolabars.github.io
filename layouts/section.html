@@ -1,0 +1,14 @@
+{{ define "main" }}
+<div class="wrap">
+  <h1 class="page-title">{{ .Title }}</h1>
+  {{- with .Content }}<div class="prose section-intro">{{ . }}</div>{{ end }}
+  {{- range .Pages.GroupByDate "2006" }}
+  <section class="year" aria-labelledby="year-{{ .Key }}">
+    <h2 class="year__label" id="year-{{ .Key }}">{{ .Key }}</h2>
+    {{ partial "entry-list.html" (dict "pages" .Pages "format" "02 Jan") }}
+  </section>
+  {{- else }}
+  <p class="empty">Nothing here yet. Follow the <a href="{{ "index.xml" | relURL }}">RSS feed</a> to get new entries.</p>
+  {{- end }}
+</div>
+{{ end }}

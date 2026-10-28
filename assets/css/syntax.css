@@ -1,0 +1,26 @@
+/* Code highlighting from the site palette. Class names come from Chroma. */
+.chroma { color: var(--ink); background: var(--code-bg); }
+.chroma .k, .chroma .kc, .chroma .kd, .chroma .kn, .chroma .kp, .chroma .kr, .chroma .kt { font-weight: 700; }
+.chroma .nf, .chroma .fm { font-weight: 600; }
+.chroma .s, .chroma .sa, .chroma .sb, .chroma .sc, .chroma .dl, .chroma .sd, .chroma .s2, .chroma .se,
+.chroma .sh, .chroma .si, .chroma .sx, .chroma .sr, .chroma .s1, .chroma .ss,
+.chroma .m, .chroma .mb, .chroma .mf, .chroma .mh, .chroma .mi, .chroma .il, .chroma .mo { color: var(--pencil); }
+.chroma .c, .chroma .ch, .chroma .cm, .chroma .c1, .chroma .cs, .chroma .cp, .chroma .cpf { color: var(--muted); }
+.chroma .gd { color: var(--muted); text-decoration: line-through; }
+.chroma .gi { font-weight: 700; }
+/* The bar sits in the pre's left padding, so it never covers the first glyph. */
+.chroma .hl { display: block; margin-left: -1.25rem; padding-left: calc(1.25rem - 3px); border-left: 3px solid var(--pencil); }
+.chroma .err { text-decoration: underline wavy; }
+
+/* Line numbers: Chroma puts them in a table, so undo the prose table styles.
+   A flex row lets the code cell take the rest of the width and scroll, like any code block. */
+.chroma .lntable { display: block; margin: 0; border-collapse: collapse; font-size: inherit; }
+.chroma .lntable tbody { display: block; }
+.chroma .lntable tr { display: flex; }
+.chroma .lntd { padding: 0; border: 0; vertical-align: top; }
+.chroma .lntd:last-child { flex: 1; min-width: 0; }
+.chroma .lntd:first-child pre { padding-right: 0.5rem; }
+.chroma .lntd:first-child .hl { margin-left: 0; padding-left: 0; border-left: 0; }
+.chroma .lnt, .chroma .ln { color: var(--muted); user-select: none; }
+/* Print wraps long lines, which would break the numbering, so the number column goes. */
+@media print { .chroma .lntd:first-child { display: none; } }

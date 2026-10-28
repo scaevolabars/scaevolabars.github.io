@@ -1,0 +1,24 @@
+{{- /* Fail the build on front matter mistakes. baseof.html calls this for every regular page. */ -}}
+{{- with .Params.topics -}}
+  {{- if not (reflect.IsSlice .) -}}
+    {{- errorf "%s: topics must be a list, for example [trading]." $.File.Path -}}
+  {{- else -}}
+    {{- range . -}}
+      {{- if not (isset site.Params.topics .) -}}
+        {{- errorf "%s: unknown topic %q. Use a slug from params.topics in hugo.toml." $.File.Path . -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if in (slice "posts" "notes") .Section -}}
+  {{- if not .Title -}}
+    {{- errorf "%s: the title is empty." .File.Path -}}
+  {{- end -}}
+  {{- if .Date.IsZero -}}
+    {{- errorf "%s: the date is missing." .File.Path -}}
+  {{- end -}}
+  {{- /* The description falls back to the plain-text summary, which would garble math and notes. */ -}}
+  {{- if and (not .Description) (or (strings.Contains .Summary `class="katex`) (strings.Contains .Summary `class="note`)) -}}
+    {{- errorf "%s: add a description: the first paragraph has math or a note." .File.Path -}}
+  {{- end -}}
+{{- end -}}

@@ -1,0 +1,17 @@
+{{ define "main" }}
+<div class="wrap">
+  <h1 class="page-title">Topics</h1>
+  {{- with .Pages }}
+  <ul class="topic-list">
+    {{- range $slug, $name := site.Params.topics }}
+    {{- with site.GetPage (printf "/topics/%s" $slug) }}
+    {{- $n := len .Pages }}
+    <li><a href="{{ .RelPermalink }}">{{ $name }}</a> <span class="count">{{ $n }}<span class="vh"> {{ if eq $n 1 }}entry{{ else }}entries{{ end }}</span></span></li>
+    {{- end }}
+    {{- end }}
+  </ul>
+  {{- else }}
+  <p class="empty">No topics yet.</p>
+  {{- end }}
+</div>
+{{ end }}

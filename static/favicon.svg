@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .p{fill:#EEF2E9}.g{stroke:#CFDACB}.i{fill:#22272B}
+    @media (prefers-color-scheme: dark){.p{fill:#1C211E}.g{stroke:#2A322D}.i{fill:#DDE4DA}}
+  </style>
+  <rect class="p" width="32" height="32" rx="4"/>
+  <path class="g" stroke-width="1" d="M8 0v32M16 0v32M24 0v32M0 8h32M0 16h32M0 24h32"/>
+  <text class="i" x="16" y="23" font-family="Georgia, serif" font-size="20" font-weight="700" text-anchor="middle">S</text>
+</svg>

@@ -1,0 +1,10 @@
+{{- /* Feeds: MathML only, since readers do not load the KaTeX CSS. */ -}}
+{{- partial "check-inline-math.html" . }}
+{{- $opts := dict "output" "mathml" "displayMode" (eq .Type "block") }}
+{{- with try (transform.ToMath .Inner $opts) }}
+  {{- with .Err }}
+    {{- errorf "Unable to render math at %s: %s" $.Position . }}
+  {{- else }}
+    {{- .Value }}
+  {{- end }}
+{{- end -}}

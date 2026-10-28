@@ -1,0 +1,24 @@
+{{ define "main" }}
+{{- $posts := where site.RegularPages "Section" "posts" }}
+{{- $notes := where site.RegularPages "Section" "notes" }}
+<div class="wrap">
+  <section class="latest" aria-labelledby="latest-posts">
+    <h2 class="latest__title" id="latest-posts">Writing</h2>
+    {{- with first 5 $posts }}
+    {{ partial "entry-list.html" (dict "pages" . "format" "02 Jan 2006") }}
+    <p class="latest__more"><a href="{{ "posts/" | relURL }}">All posts</a></p>
+    {{- else }}
+    <p class="empty">No posts yet. Follow the <a href="{{ "index.xml" | relURL }}">RSS feed</a> to get the first one.</p>
+    {{- end }}
+  </section>
+  <section class="latest" aria-labelledby="latest-notes">
+    <h2 class="latest__title" id="latest-notes">Notes</h2>
+    {{- with first 3 $notes }}
+    {{ partial "entry-list.html" (dict "pages" . "format" "02 Jan 2006") }}
+    <p class="latest__more"><a href="{{ "notes/" | relURL }}">All notes</a></p>
+    {{- else }}
+    <p class="empty">No paper notes yet.</p>
+    {{- end }}
+  </section>
+</div>
+{{ end }}
