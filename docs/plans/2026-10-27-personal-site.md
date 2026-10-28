@@ -1853,6 +1853,7 @@ Set `draft: false` to publish. Topics must be slugs from `params.topics` in `hug
 - Math: `$inline$` and `$$display$$`. Write `\$` for a literal dollar sign in text; inline math that starts or ends with a space fails the build, which catches prices such as `$5 and $10`. Inside a formula, write `\textdollar` for a dollar sign.
 - Diagram: a fenced code block with the language `mermaid`.
 - CV: `data/cv.yaml`. Projects: `data/projects.yaml`. For a PDF CV, put it in `static/` and set `pdf` in `data/cv.yaml`.
+- Keep the drafts `content/posts/sample-features.md`, `content/posts/sample-older.md` and `content/notes/sample-note.md`. They are never published; the tests use them, and they show every feature in use.
 
 ## Check
 
